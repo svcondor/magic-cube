@@ -1,14 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.26014.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rubik2", "Rubik2\Rubik2.csproj", "{CC2485E6-BBDE-46D3-BE78-3B2C2D705598}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{6006E1B4-B966-47E3-927D-2EBB06388D92}"
 	ProjectSection(SolutionItems) = preProject
 		CubeDetails.xlsx = CubeDetails.xlsx
-		README.md = README.md
 	EndProjectSection
 EndProject
 Global

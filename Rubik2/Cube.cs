@@ -40,8 +40,20 @@ namespace Rubik2
   /// </summary>
   public class Cube : ModelVisual3D
   {
+
+    /// <summary> Cube is 3 * 3 </summary>
+    public const int sidePieces = 3;
+
+    /// <summary> Length of the cube edge /// </summary>
+    public const double pieceSize = 1;
+
+    /// <summary> Space between pieces </summary>
+    public const double spaceSize = 0.1; // was 0.05
+    public const double cubeLen = pieceSize * sidePieces + spaceSize * (sidePieces - 1);
+
+
     private Point3D origin;
-    private double edge_len;
+    //private double pieceSize;
 
     private Material defaultMaterial = new DiffuseMaterial(new SolidColorBrush(Colors.Black));
     private Dictionary<CubeFace, Material> faces;
@@ -60,7 +72,7 @@ namespace Rubik2
     /// </param>
     public Cube(Point3D o, double len, Dictionary<CubeFace, Material> f, HashSet<Move> possibleMoves, Material defaultMaterial = null) {
       this.origin = o;
-      this.edge_len = len;
+      //this.pieceSize = len;
       this.faces = f;
       this.possibleMoves = possibleMoves;
 
@@ -112,20 +124,20 @@ namespace Rubik2
            * 1-------2/
            */
           p0.X = origin.X;
-          p0.Y = origin.Y + edge_len;
-          p0.Z = origin.Z + edge_len;
+          p0.Y = origin.Y + pieceSize;
+          p0.Z = origin.Z + pieceSize;
 
           p1.X = origin.X;
           p1.Y = origin.Y;
-          p1.Z = origin.Z + edge_len;
+          p1.Z = origin.Z + pieceSize;
 
-          p2.X = origin.X + edge_len;
+          p2.X = origin.X + pieceSize;
           p2.Y = origin.Y;
-          p2.Z = origin.Z + edge_len;
+          p2.Z = origin.Z + pieceSize;
 
-          p3.X = origin.X + edge_len;
-          p3.Y = origin.Y + edge_len;
-          p3.Z = origin.Z + edge_len;
+          p3.X = origin.X + pieceSize;
+          p3.Y = origin.Y + pieceSize;
+          p3.Z = origin.Z + pieceSize;
           break;
         case CubeFace.R:
           /**
@@ -135,20 +147,20 @@ namespace Rubik2
            * |       | 2
            * |-------1/
            */
-          p0.X = origin.X + edge_len;
-          p0.Y = origin.Y + edge_len;
-          p0.Z = origin.Z + edge_len;
+          p0.X = origin.X + pieceSize;
+          p0.Y = origin.Y + pieceSize;
+          p0.Z = origin.Z + pieceSize;
 
-          p1.X = origin.X + edge_len;
+          p1.X = origin.X + pieceSize;
           p1.Y = origin.Y;
-          p1.Z = origin.Z + edge_len;
+          p1.Z = origin.Z + pieceSize;
 
-          p2.X = origin.X + edge_len;
+          p2.X = origin.X + pieceSize;
           p2.Y = origin.Y;
           p2.Z = origin.Z;
 
-          p3.X = origin.X + edge_len;
-          p3.Y = origin.Y + edge_len;
+          p3.X = origin.X + pieceSize;
+          p3.Y = origin.Y + pieceSize;
           p3.Z = origin.Z;
           break;
         case CubeFace.B:
@@ -159,18 +171,18 @@ namespace Rubik2
            * | 2 ----|-1
            * |-------|/
            */
-          p0.X = origin.X + edge_len;
-          p0.Y = origin.Y + edge_len;
+          p0.X = origin.X + pieceSize;
+          p0.Y = origin.Y + pieceSize;
           p0.Z = origin.Z;
 
-          p1.X = origin.X + edge_len;
+          p1.X = origin.X + pieceSize;
           p1.Y = origin.Y;
           p1.Z = origin.Z;
 
           p2 = origin;
 
           p3.X = origin.X;
-          p3.Y = origin.Y + edge_len;
+          p3.Y = origin.Y + pieceSize;
           p3.Z = origin.Z;
           break;
         case CubeFace.L:
@@ -182,18 +194,18 @@ namespace Rubik2
            * 2-------|/
            */
           p0.X = origin.X;
-          p0.Y = origin.Y + edge_len;
+          p0.Y = origin.Y + pieceSize;
           p0.Z = origin.Z;
 
           p1 = origin;
 
           p2.X = origin.X;
           p2.Y = origin.Y;
-          p2.Z = origin.Z + edge_len;
+          p2.Z = origin.Z + pieceSize;
 
           p3.X = origin.X;
-          p3.Y = origin.Y + edge_len;
-          p3.Z = origin.Z + edge_len;
+          p3.Y = origin.Y + pieceSize;
+          p3.Z = origin.Z + pieceSize;
           break;
         case CubeFace.U:
           /**
@@ -204,19 +216,19 @@ namespace Rubik2
            * |-------|/
            */
           p0.X = origin.X;
-          p0.Y = origin.Y + edge_len;
+          p0.Y = origin.Y + pieceSize;
           p0.Z = origin.Z;
 
           p1.X = origin.X;
-          p1.Y = origin.Y + edge_len;
-          p1.Z = origin.Z + edge_len;
+          p1.Y = origin.Y + pieceSize;
+          p1.Z = origin.Z + pieceSize;
 
-          p2.X = origin.X + edge_len;
-          p2.Y = origin.Y + edge_len;
-          p2.Z = origin.Z + edge_len;
+          p2.X = origin.X + pieceSize;
+          p2.Y = origin.Y + pieceSize;
+          p2.Z = origin.Z + pieceSize;
 
-          p3.X = origin.X + edge_len;
-          p3.Y = origin.Y + edge_len;
+          p3.X = origin.X + pieceSize;
+          p3.Y = origin.Y + pieceSize;
           p3.Z = origin.Z;
           break;
         case CubeFace.D:
@@ -229,17 +241,17 @@ namespace Rubik2
            */
           p0 = origin;
 
-          p1.X = origin.X + edge_len;
+          p1.X = origin.X + pieceSize;
           p1.Y = origin.Y;
           p1.Z = origin.Z;
 
-          p2.X = origin.X + edge_len;
+          p2.X = origin.X + pieceSize;
           p2.Y = origin.Y;
-          p2.Z = origin.Z + edge_len;
+          p2.Z = origin.Z + pieceSize;
 
           p3.X = origin.X;
           p3.Y = origin.Y;
-          p3.Z = origin.Z + edge_len;
+          p3.Z = origin.Z + pieceSize;
           break;
       }
 

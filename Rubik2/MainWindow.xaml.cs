@@ -17,33 +17,18 @@ using System.Diagnostics;
 using System.IO;
 using Microsoft.Win32;
 
-
 namespace Rubik2
 {
-  /// <summary>
-  /// Interaction logic for MainWindow.xaml
-  /// </summary>
+  /// <summary> MainWindow.xaml code behind</summary>
   public partial class MainWindow : Window
   {
+
     public MainWindow() {
       InitializeComponent();
     }
 
-    private enum Difficulty
-    {
-      Easy = 10,
-      Normal = 20,
-      Hard = 30,
-      VeryHard = 40
-    }
-
     Point startMoveCamera;
     bool allowMoveCamera = false, allowMoveLayer = false, gameOver = false;
-    int size = 3;
-    double edge_len = 1;
-    double space = 0.1;  //Was 0.05
-    double cubeLen;
-    //int solveIndex;
 
     Transform3DGroup rotations = new Transform3DGroup();
     RubikCube c;
@@ -52,23 +37,22 @@ namespace Rubik2
     HashSet<string> touchedFaces = new HashSet<string>();
 
     List<KeyValuePair<Move, RotationDirection>> doneMoves = new List<KeyValuePair<Move, RotationDirection>>();
-    InputOutput IO;
+    InputOutput IO = new InputOutput(RubikCube.sidePieces);
 
     private void Window_Loaded(object sender, RoutedEventArgs e) {
-      double distanceFactor = 3.0; // was 2.3
-      distanceFactor = 3.0;
-      cubeLen = edge_len * size + space * (size - 1);
+      //double distanceFactor = 3.0; // was 2.3
+      //distanceFactor = 3.0;
+      //cubeLen = edge_len * size + space * (size - 1);
 
-      IO = new InputOutput(size);
+      //IO = new InputOutput(size);
 
-      double cameraDistance = cubeLen * distanceFactor;
-
+      //double cameraDistance = cubeLen * distanceFactor;
+      double cameraDistance = 10;
       var cameraPos = new Point3D {
         X = cameraDistance - 4,    // Was -0
         Y = cameraDistance - 3,    // Was -0
         Z = cameraDistance
       };
-      //Point3D cameraPos = new Point3D(len * distanceFactor, len * distanceFactor, len * distanceFactor);
 
       var camera = new PerspectiveCamera {
         Position = cameraPos,
@@ -78,16 +62,16 @@ namespace Rubik2
       };
       this.mainViewport.Camera = camera;
 
-      var camera2 = new PerspectiveCamera {
-        Position = new Point3D { X = -cameraDistance, Y = -cameraDistance, Z = -cameraDistance },
-        LookDirection = new Vector3D(cameraDistance, cameraDistance, cameraDistance),
-        //LookDirection = new Vector3D(0, 0, 0),
-        //Position = cameraPos,
-        //LookDirection = new Vector3D(-cameraPos.X, -cameraPos.Y, -cameraPos.Z),
-        UpDirection = new Vector3D(0, 1, 0),
-        FieldOfView = 45
-      };
-      this.backViewport.Camera = camera2;
+      //var camera2 = new PerspectiveCamera {
+      //  Position = new Point3D { X = -cameraDistance, Y = -cameraDistance, Z = -cameraDistance },
+      //  LookDirection = new Vector3D(cameraDistance, cameraDistance, cameraDistance),
+      //  //LookDirection = new Vector3D(0, 0, 0),
+      //  //Position = cameraPos,
+      //  //LookDirection = new Vector3D(-cameraPos.X, -cameraPos.Y, -cameraPos.Z),
+      //  UpDirection = new Vector3D(0, 1, 0),
+      //  FieldOfView = 45
+      //};
+      //this.backViewport.Camera = camera2;
     }
 
     private void scramble1(int n) {
@@ -138,11 +122,11 @@ namespace Rubik2
 
     private void Window_MouseMove(object sender, MouseEventArgs e) {
       if (allowMoveCamera) {
-        moveCamera(e.GetPosition(this));
+        //moveCamera(e.GetPosition(this));
       }
 
       if (allowMoveLayer) {
-        moveLayer(e.GetPosition((UIElement)sender));
+        //moveLayer(e.GetPosition((UIElement)sender));
       }
     }
 
@@ -229,10 +213,10 @@ namespace Rubik2
       menuSolve.IsEnabled = false;
 
       if (file != null) {
-        c = new RubikCube(IO.read(file, out doneMoves), size, new Point3D(-cubeLen / 2, -cubeLen / 2, -cubeLen / 2), RubikCube.animationTime, edge_len, space);
+        c = new RubikCube(IO.read(file, out doneMoves));
       }
       else {
-        c = new RubikCube(size, new Point3D(-cubeLen / 2, -cubeLen / 2, -cubeLen / 2), RubikCube.animationTime, edge_len, space);
+        c = new RubikCube();
       }
 
       c.Transform = rotations;
@@ -242,28 +226,16 @@ namespace Rubik2
       //        new DiffuseMaterial(new SolidColorBrush(Colors.Transparent)));
 
       this.mainViewport.Children.Add(c);
-      //this.backViewport.Children.Add(c);
-      //this.mainViewport.Children.Add(touchFaces);
 
       if (!menuEnableAnimations.IsChecked) {
         c.animationDuration = TimeSpan.FromMilliseconds(1);
       }
-
-      if (file == null) {
-        //scramble1(25);
+      else {
+        c.animationDuration = RubikCube.animationTime;
       }
-
-      //gameOver = false;
-      //saveMenu.IsEnabled = true;
-      //solveMenu.IsEnabled = true;
-      //move1Menu.IsEnabled = true;
-      //solveIndex = 0;
 
       gameOver = true;
       menuSolve.IsEnabled = false;
-      //menuSave.IsEnabled = false;
-      //menuMove1.IsEnabled = false;
-
     }
 
     private void menuEnableAnimations_Checked(object sender, RoutedEventArgs e) {
@@ -310,22 +282,6 @@ namespace Rubik2
       }
     }
 
-    //private void menuMove1_Click(object sender, RoutedEventArgs e) {
-    //  if (gameOver == false && solveIndex == 0) {
-    //    menuSolve.IsEnabled = false;
-    //    menuSave.IsEnabled = false;
-    //  }
-    //  List<KeyValuePair<Move, RotationDirection>> m1 = new List<KeyValuePair<Move, RotationDirection>>();
-    //  int i = doneMoves.Count - 1 - solveIndex;
-    //  m1.Add(new KeyValuePair<Move, RotationDirection>(doneMoves[i].Key, (RotationDirection)(-1 * (int)doneMoves[i].Value)));
-    //  ++solveIndex;
-    //  if (solveIndex >= doneMoves.Count) {
-    //    gameOver = true;
-    //    menuMove1.IsEnabled = false;
-    //  }
-    //  c.rotate(m1);
-    //}
-
     public static int viewTableIx = 0;
     public static string[] viewTable = new string[] {
       "UFLBRD",
@@ -353,6 +309,13 @@ namespace Rubik2
       switch (viewTableIx) {
         case 4: viewTableIx = 0; break;
         case 0: viewTableIx = 4; break;
+        //case 1: viewTableIx = 5; break;
+        //case 2: viewTableIx = 6; break;
+        //case 3: viewTableIx = 7; break;
+        //case 5: viewTableIx = 1; break;
+        //case 6: viewTableIx = 2; break;
+        //case 7: viewTableIx = 3; break;
+
         default: viewTableIx = 8 - viewTableIx; break;
       }
     }

@@ -10,18 +10,8 @@ namespace Rubik2
 {
   public class RubikCube : Cube
   {
-    private int size;
-    private Point3D origin;
+    private Point3D origin = new Point3D(-cubeLen / 2, -cubeLen / 2, -cubeLen / 2);
 
-    /// <summary>
-    /// Length of the cube edge
-    /// </summary>
-    private double edge_len;
-
-    /// <summary>
-    /// Space between the cubes forming the bigger cube
-    /// </summary>
-    private double space;
 
     public Cube2D projection;
     public static TimeSpan animationTime = TimeSpan.FromMilliseconds(300);
@@ -42,50 +32,48 @@ namespace Rubik2
     //public RubikCube() {
     //  createCube();
     //}
-    public RubikCube(int size, Point3D o, TimeSpan duration, double len = 1, double space = 0.1) {
-      this.size = size;
-      this.origin = o;
-      this.edge_len = len;
-      this.space = space;
-      this.projection = new Cube2D(size);
-      this.animationDuration = duration;
+    //public RubikCube(int size1, Point3D o1, TimeSpan duration1, double len1 = 1, double space1 = 0.1) {
+      public RubikCube()
+      {
+        //RubikCube.size = size;
+        //this.origin = o;
+        //this.edge_len = len;
+        //this.space = space;
+        this.projection = new Cube2D();
+      //this.animationDuration = duration;
 
       createCube();
     }
 
-    public RubikCube(CubeFace[,] projection, int size, Point3D o, TimeSpan duration, double len = 1, double space = 0.1) {
-      this.size = size;
-      this.origin = o;
-      this.edge_len = len;
-      this.space = space;
-      this.projection = new Cube2D(size, projection);
-      this.animationDuration = duration;
-
+    /// <summary> When Saved Cube is Loaded </summary>
+    public RubikCube(CubeFace[,] projection) {
+      this.projection = new Cube2D(projection);
       createCubeFromProjection();
     }
 
+    /// <summary> When Saved Cube is Loaded </summary>
     private void createCubeFromProjection() {
       Cube c;
       Dictionary<CubeFace, Material> colors;
 
       double x_offset, y_offset, z_offset;
 
-      for (int y = 0; y < size; y++) {
-        for (int z = 0; z < size; z++) {
-          for (int x = 0; x < size; x++) {
+      for (int y = 0; y < sidePieces; y++) {
+        for (int z = 0; z < sidePieces; z++) {
+          for (int x = 0; x < sidePieces; x++) {
             if (y == 1 && x == 1 && z == 1) {
               continue;
             }
 
-            x_offset = (edge_len + space) * x;
-            y_offset = (edge_len + space) * y;
-            z_offset = (edge_len + space) * z;
+            x_offset = (pieceSize + spaceSize) * x;
+            y_offset = (pieceSize + spaceSize) * y;
+            z_offset = (pieceSize + spaceSize) * z;
 
             Point3D p = new Point3D(origin.X + x_offset, origin.Y + y_offset, origin.Z + z_offset);
 
             colors = setFaceColorsFromProjection(x, y, z, projection.projection);
 
-            c = new Cube(p, edge_len, colors, getPossibleMoves(x, y, z));
+            c = new Cube(p, pieceSize, colors, getPossibleMoves(x, y, z));
             this.Children.Add(c);
           }
         }
@@ -98,22 +86,22 @@ namespace Rubik2
 
       double x_offset, y_offset, z_offset;
 
-      for (int y = 0; y < size; y++) {
-        for (int z = 0; z < size; z++) {
-          for (int x = 0; x < size; x++) {
+      for (int y = 0; y < sidePieces; y++) {
+        for (int z = 0; z < sidePieces; z++) {
+          for (int x = 0; x < sidePieces; x++) {
             if (y == 1 && x == 1 && z == 1) {
               continue;
             }
 
-            x_offset = (edge_len + space) * x;
-            y_offset = (edge_len + space) * y;
-            z_offset = (edge_len + space) * z;
+            x_offset = (pieceSize + spaceSize) * x;
+            y_offset = (pieceSize + spaceSize) * y;
+            z_offset = (pieceSize + spaceSize) * z;
 
             Point3D p = new Point3D(origin.X + x_offset, origin.Y + y_offset, origin.Z + z_offset);
 
             colors = setFaceColors(x, y, z);
 
-            c = new Cube(p, edge_len, colors, getPossibleMoves(x, y, z));
+            c = new Cube(p, pieceSize, colors, getPossibleMoves(x, y, z));
             this.Children.Add(c);
           }
         }
@@ -123,35 +111,17 @@ namespace Rubik2
     private HashSet<Move> getPossibleMoves(int x, int y, int z) {
       HashSet<Move> moves = new HashSet<Move>();
 
-      if (y == 0) {
-        moves.Add(Move.D);
-      }
-      else if (y == size - 1) {
-        moves.Add(Move.U);
-      }
-      else {
-        moves.Add(Move.E);
-      }
+      if (y == 0) moves.Add(Move.D);
+      else if (y == sidePieces - 1) moves.Add(Move.U);
+      else moves.Add(Move.E);
 
-      if (x == 0) {
-        moves.Add(Move.L);
-      }
-      else if (x == size - 1) {
-        moves.Add(Move.R);
-      }
-      else {
-        moves.Add(Move.M);
-      }
+      if (x == 0) moves.Add(Move.L);
+      else if (x == sidePieces - 1) moves.Add(Move.R);
+      else moves.Add(Move.M);
 
-      if (z == 0) {
-        moves.Add(Move.B);
-      }
-      else if (z == size - 1) {
-        moves.Add(Move.F);
-      }
-      else {
-        moves.Add(Move.S);
-      }
+      if (z == 0) moves.Add(Move.B);
+      else if (z == sidePieces - 1)moves.Add(Move.F);
+      else moves.Add(Move.S);
 
       return moves;
     }
@@ -516,15 +486,15 @@ namespace Rubik2
         colors.Add(CubeFace.B, faceColors[CubeFace.B]);
       }
 
-      if (x == size - 1) {
+      if (x == sidePieces - 1) {
         colors.Add(CubeFace.R, faceColors[CubeFace.R]);
       }
 
-      if (y == size - 1) {
+      if (y == sidePieces - 1) {
         colors.Add(CubeFace.U, faceColors[CubeFace.U]);
       }
 
-      if (z == size - 1) {
+      if (z == sidePieces - 1) {
         colors.Add(CubeFace.F, faceColors[CubeFace.F]);
       }
 
