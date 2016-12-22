@@ -7,9 +7,7 @@ using System.Windows.Media;
 
 namespace Rubik2
 {
-  /// <summary>
-  /// Designates a standard naming of a cube's sides or faces
-  /// </summary>
+  /// <summary> Piece/Cube face names Front Right Back Left Up Down none </summary>
   public enum CubeFace
   {
     F, // front
@@ -22,7 +20,7 @@ namespace Rubik2
   }
 
   /// <summary>
-  /// Create a cube
+  /// Create a Piece
   /// 
   /// In order to display the cube to a <see cref="ViewPort3D"/>:
   /// <code>
@@ -41,35 +39,21 @@ namespace Rubik2
   public class Piece : ModelVisual3D
   {
 
-    /// <summary> Cube is 3 * 3 </summary>
-    public const int sidePieces = 3;
-
-    /// <summary> Length of the cube edge /// </summary>
+    /// <summary> Length of the cube edge </summary>
     public const double pieceSize = 1;
 
-    /// <summary> Space between pieces </summary>
-    public const double spaceSize = 0.1; // was 0.05
-    public const double cubeLen = pieceSize * sidePieces + spaceSize * (sidePieces - 1);
-
-
+    /// <summary> Far-lower-left corner of Piece </summary>
     private Point3D origin;
-    //private double pieceSize;
 
     private Material defaultMaterial = new DiffuseMaterial(new SolidColorBrush(Colors.Black));
     private Dictionary<CubeFace, Material> faces;
     public HashSet<Move> possibleMoves = new HashSet<Move>();
     public Transform3DGroup rotations = new Transform3DGroup();
 
-    /// <summary>
-    /// Piece constructor
-    /// </summary>
+    /// <summary> Piece constructor </summary>
     /// <param name="o">The origin of the cube, this will always be the far-lower-left corner</param>
-    /// <param name="len">The length of the edge</param>
     /// <param name="f">This parameter allows the use of different materials on the cube's faces</param>
-    /// <param name="defaultMaterial">The material to be applied on the faces 
-    /// that are not included in the previous parameter.
-    /// This defaults to a solid black diffuse material
-    /// </param>
+    /// <param name="defaultMaterial">The material to be applied on the faces default=black </param>
     public Piece(Point3D o, Dictionary<CubeFace, Material> f, HashSet<Move> possibleMoves, Material defaultMaterial = null) {
       this.origin = o;
       //this.pieceSize = len;
@@ -79,13 +63,12 @@ namespace Rubik2
       if (defaultMaterial != null) {
         this.defaultMaterial = defaultMaterial;
       }
-
       this.Transform = this.rotations;
-
       createCube();
     }
 
-    protected Piece() { }
+    protected Piece() {
+    }
 
     /// <summary>
     /// Creates the cube by creating it's 6 faces
@@ -94,8 +77,8 @@ namespace Rubik2
     /// otherwise <see cref="defaultMaterial"/> will be used
     /// </summary>
     protected virtual void createCube() {
-      Material material;
       foreach (var face in Enum.GetValues(typeof(CubeFace)).Cast<CubeFace>()) {
+        Material material;
         if (faces == null || !faces.TryGetValue(face, out material)) {
           material = defaultMaterial;
         }

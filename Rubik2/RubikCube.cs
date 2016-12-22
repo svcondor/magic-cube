@@ -11,7 +11,17 @@ namespace Rubik2
 {
   public class RubikCube : Piece
   {
-    private Point3D origin = new Point3D(-cubeLen / 2, -cubeLen / 2, -cubeLen / 2);
+    /// <summary> Cube is 3 pieces * 3 </summary>
+    public const int sidePieces = 3;
+
+    /// <summary> Space between pieces </summary>
+    public const double spaceSize = 0.1; // was 0.05
+    public const double cubeSize = Piece.pieceSize * sidePieces + spaceSize * (sidePieces - 1);
+
+
+
+
+    private Point3D origin = new Point3D(-cubeSize / 2, -cubeSize / 2, -cubeSize / 2);
 
 
     public Cube2D projection;

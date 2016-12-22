@@ -13,13 +13,13 @@ namespace Rubik2
     public CubeFace[,] projection { get; private set; }
 
     public Cube2D() {
-      this.sidePieces = Piece.sidePieces;
+      this.sidePieces = RubikCube.sidePieces;
       this.projection = new CubeFace[sidePieces * 4, sidePieces * 3];
       createCube();
     }
 
     public Cube2D(CubeFace[,] c) {
-      this.sidePieces = Piece.sidePieces;
+      this.sidePieces = RubikCube.sidePieces;
       this.projection = c;
 
       if (!isValidProjection()) {
