@@ -1,22 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Windows.Media.Media3D;
+using System.Diagnostics;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
-using System.Diagnostics;
-using System.Windows;
-using System.Threading;
-using System.IO;
+using System.Windows.Media.Media3D;
+using System.Windows.Threading;
 
-namespace magic_cube {
-    public class RubikCube : Cube {
-        /// <summary>
-        /// The cube will be size x size x size
-        /// </summary>
+namespace Rubik2
+{
+  public class RubikCube : Cube {
         private int size;
-
         private Point3D origin;
 
         /// <summary>
@@ -40,11 +33,13 @@ namespace magic_cube {
             {CubeFace.L, new DiffuseMaterial(new SolidColorBrush(Colors.Red))},
             {CubeFace.D, new DiffuseMaterial(new SolidColorBrush(Colors.Yellow))},
             {CubeFace.B, new DiffuseMaterial(new SolidColorBrush(Colors.Green))},
-            {CubeFace.R, new DiffuseMaterial(new SolidColorBrush(Colors.Orange))},
+            {CubeFace.R, new DiffuseMaterial(new SolidColorBrush(Colors.DarkOrange))},
             {CubeFace.U, new DiffuseMaterial(new SolidColorBrush(Colors.White))},
             {CubeFace.F, new DiffuseMaterial(new SolidColorBrush(Colors.Blue))}
         };
-        
+        //public RubikCube() {
+        //  createCube();
+        //}
         public RubikCube(int size, Point3D o, TimeSpan duration, double len = 1, double space = 0.1) {
             this.size = size;
             this.origin = o;
@@ -198,6 +193,7 @@ namespace magic_cube {
             HashSet<Move> possibleMoves = new HashSet<Move>();
             Vector3D axis = new Vector3D();
             double angle = 90 * Convert.ToInt32(moves[i].Value);
+
             axis = getRotationAxis(moves[i].Key);
 
             AxisAngleRotation3D rotation = new AxisAngleRotation3D(axis, angle);
@@ -211,7 +207,8 @@ namespace magic_cube {
 
                 if (possibleMoves.Contains(moves[i].Key)) {
                     c.possibleMoves = getNextPossibleMoves(c.possibleMoves, moves[i].Key, moves[i].Value);
-                    c.rotations.Children.Add(transform); rotation.BeginAnimation(AxisAngleRotation3D.AngleProperty, animation);
+                    c.rotations.Children.Add(transform);
+                    rotation.BeginAnimation(AxisAngleRotation3D.AngleProperty, animation);
                 }
             }
 
@@ -259,14 +256,65 @@ namespace magic_cube {
 
             projection.rotate(move);
             rotation.BeginAnimation(AxisAngleRotation3D.AngleProperty, animation);
-
-            return true;
+            App.Current.Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, new Action(() => { })).Wait();
+      return true;
         }
 
-        private Vector3D getRotationAxis(Move m){
-            Vector3D axis = new Vector3D();
+    public bool rotateAll(KeyValuePair<Move, RotationDirection> move) {
+      if (animation_lock) {
+        return false;
+      }
+      Dictionary<Move, CubeFace> dominantFaces = new Dictionary<Move, CubeFace> {
+                {Move.B, CubeFace.R},
+                {Move.D, CubeFace.R},
+                {Move.E, CubeFace.R},
+                {Move.F, CubeFace.R},
+                {Move.L, CubeFace.F},
+                {Move.M, CubeFace.F},
+                {Move.R, CubeFace.F},
+                {Move.S, CubeFace.R},
+                {Move.U, CubeFace.F},
+            };
 
-             switch (m) {
+      HashSet<Move> possibleMoves = new HashSet<Move>();
+      Vector3D axis = getRotationAxis(move.Key);
+
+      double angle = 90 * Convert.ToInt32(move.Value);
+
+      AxisAngleRotation3D rotation = new AxisAngleRotation3D(axis, angle);
+      RotateTransform3D transform = new RotateTransform3D(rotation, new Point3D(0, 0, 0));
+
+      DoubleAnimation animation = new DoubleAnimation(0, angle, animationDuration);
+
+      foreach (Cube c in this.Children) {
+        //possibleMoves = new HashSet<Move>(c.possibleMoves);
+        //possibleMoves.Remove((Move)dominantFaces[move.Key]);
+        //if (possibleMoves.Contains(move.Key)) {
+        //  c.possibleMoves = getNextPossibleMoves(c.possibleMoves, move.Key, move.Value);
+
+        //  c.rotations.Children.Add(transform);
+        //}
+        c.rotations.Children.Add(transform);
+
+      }
+
+      projection.rotate(move);
+      rotation.BeginAnimation(AxisAngleRotation3D.AngleProperty, animation);
+
+      return true;
+    }
+
+      private Vector3D getRotationAxis(Move m){
+            Vector3D axis = new Vector3D();
+      var viewTableIx = MainWindow.viewTableIx;
+      var viewTable = MainWindow.viewTable;
+      string move2 = m.ToString();
+      int ix = viewTable[viewTableIx].IndexOf(move2);
+      string move1 = viewTable[0].Substring(ix, 1);
+      Move move = (Move)Enum.Parse(typeof(Move), move1);
+      // ix = 1 D => D !!
+      Debug.WriteLine($"getRotationAxis VTIX={viewTableIx} {m}=>{move}");
+      switch (move) {
                 case Move.F:
                 case Move.S:
                     axis.X = 0;

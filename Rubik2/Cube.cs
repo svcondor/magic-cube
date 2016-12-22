@@ -5,7 +5,8 @@ using System.Text;
 using System.Windows.Media.Media3D;
 using System.Windows.Media;
 
-namespace magic_cube {
+namespace Rubik2
+{
     /// <summary>
     /// Designates a standard naming of a cube's sides or faces
     /// </summary>

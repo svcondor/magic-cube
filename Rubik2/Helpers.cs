@@ -6,7 +6,8 @@ using System.Windows.Media.Media3D;
 using System.Windows.Media;
 using System.Diagnostics;
 
-namespace magic_cube {
+namespace Rubik2
+{
     public static class Helpers {
         /// <summary>
         /// Create a triangle which can be used for more complex models

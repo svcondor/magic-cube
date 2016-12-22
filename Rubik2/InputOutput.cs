@@ -4,7 +4,8 @@ using System.Linq;
 using System.Text;
 using System.IO;
 
-namespace magic_cube {
+namespace Rubik2
+{
     class InputOutput {
         private int size;
 

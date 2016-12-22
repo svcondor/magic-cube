@@ -5,7 +5,8 @@ using System.Text;
 using System.Diagnostics;
 using System.IO;
 
-namespace magic_cube {
+namespace Rubik2
+{
     public class Cube2D {
         private int size;
         public CubeFace[,] projection{get; private set;}
