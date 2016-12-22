@@ -29,7 +29,7 @@ namespace Rubik2
 
     bool gameOver = false;
 
-    RubikCube c;
+    RubikCube rubikCube;
     MyModelVisual3D touchFaces;
     Movement movement = new Movement();
     HashSet<string> touchedFaces = new HashSet<string>();
@@ -61,14 +61,14 @@ namespace Rubik2
           ++i;
         }
       }
-      c.rotate(moves);
+      rubikCube.rotate(moves);
       gameOver = false;
       menuSolve.IsEnabled = true;
     }
 
     private HitTestResultBehavior resultCb(HitTestResult r) {
-
       MyModelVisual3D model = r.VisualHit as MyModelVisual3D;
+
 
       if (model != null) {
         touchedFaces.Add(model.Tag);
@@ -79,7 +79,7 @@ namespace Rubik2
     }
 
     private void Window_ContentRendered(object sender, EventArgs e) {
-      double cameraDistance = 10;
+      double cameraDistance = 8;
       var cameraPos = new Point3D {
         X = cameraDistance - 4,    // Was -0
         Y = cameraDistance - 3,    // Was -0
@@ -98,24 +98,24 @@ namespace Rubik2
     }
 
     private void init() {
-      this.mainViewport.Children.Remove(c);
+      this.mainViewport.Children.Remove(rubikCube);
       this.mainViewport.Children.Remove(touchFaces);
       doneMoves.Clear();
 
       menuSolve.IsEnabled = false;
-      c = new RubikCube();
+      rubikCube = new RubikCube();
 
       touchFaces = null; // Not used now probably detects which face has mouse
       //touchFaces = Helpers.createTouchFaces(len, size, rotations,
       //        new DiffuseMaterial(new SolidColorBrush(Colors.Transparent)));
 
-      this.mainViewport.Children.Add(c);
+      this.mainViewport.Children.Add(rubikCube);
 
       if (!menuEnableAnimations.IsChecked) {
-        c.animationDuration = TimeSpan.FromMilliseconds(1);
+        rubikCube.animationDuration = TimeSpan.FromMilliseconds(1);
       }
       else {
-        c.animationDuration = RubikCube.animationTime;
+        rubikCube.animationDuration = RubikCube.animationTime;
       }
 
       gameOver = true;
@@ -124,14 +124,14 @@ namespace Rubik2
     }
 
     private void menuEnableAnimations_Checked(object sender, RoutedEventArgs e) {
-      if (c != null) {
-        c.animationDuration = RubikCube.animationTime;
+      if (rubikCube != null) {
+        rubikCube.animationDuration = RubikCube.animationTime;
       }
     }
 
     private void menuEnableAnimations_Unchecked(object sender, RoutedEventArgs e) {
-      if (c != null) {
-        c.animationDuration = TimeSpan.FromMilliseconds(1);
+      if (rubikCube != null) {
+        rubikCube.animationDuration = TimeSpan.FromMilliseconds(1);
       }
     }
 
@@ -150,7 +150,7 @@ namespace Rubik2
     /// <summary> Rotate button pressed</summary>
     private void btnRotate_Click(object sender, RoutedEventArgs e) {
       KeyValuePair<Move, RotationDirection> m = new KeyValuePair<Move, RotationDirection>(Move.U, RotationDirection.ClockWise);
-      c.rotateAll(m);
+      rubikCube.rotateAll(m);
       viewTableIx = viewTableIx + 1;
       if (viewTableIx == 4) viewTableIx = 0;
       else if (viewTableIx == 8) viewTableIx = 4;
@@ -159,8 +159,8 @@ namespace Rubik2
     /// <summary> Flip button pressed</summary>
     private void btnFlip_Click(object sender, RoutedEventArgs e) {
       KeyValuePair<Move, RotationDirection> m = new KeyValuePair<Move, RotationDirection>(Move.R, RotationDirection.ClockWise);
-      c.rotateAll(m);
-      c.rotateAll(m);
+      rubikCube.rotateAll(m);
+      rubikCube.rotateAll(m);
       switch (viewTableIx) {
         case 4: viewTableIx = 0; break;
         case 0: viewTableIx = 4; break;
@@ -195,7 +195,7 @@ namespace Rubik2
         }
       }
       if (moveList.Count > 0) {
-        c.rotate(moveList);
+        rubikCube.rotate(moveList);
       }
     }
 
@@ -206,7 +206,7 @@ namespace Rubik2
       List<KeyValuePair<Move, RotationDirection>> moveList
         = new List<KeyValuePair<Move, RotationDirection>>();
       handleMove(moveList, (string)button.Content);
-      c.rotate(moveList);
+      rubikCube.rotate(moveList);
     }
 
     /// <summary> Add move to move list for animation </summary>
@@ -251,7 +251,7 @@ namespace Rubik2
       for (int i = doneMoves.Count - 1; i >= 0; i--) {
         m.Add(new KeyValuePair<Move, RotationDirection>(doneMoves[i].Key, (RotationDirection)(-1 * (int)doneMoves[i].Value)));
       }
-      c.rotate(m);
+      rubikCube.rotate(m);
     }
 
 
@@ -259,7 +259,7 @@ namespace Rubik2
 
       viewTableIx = 0;
       init();
-      c.animationDuration = TimeSpan.FromMilliseconds(1);
+      rubikCube.animationDuration = TimeSpan.FromMilliseconds(1);
       scramble1(25);
     }
 

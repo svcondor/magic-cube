@@ -15,45 +15,6 @@ namespace Rubik2
     public Cube2D() {
       this.sidePieces = RubikCube.sidePieces;
       this.projection = new CubeFace[sidePieces * 4, sidePieces * 3];
-      createCube();
-    }
-
-    public Cube2D(CubeFace[,] c) {
-      this.sidePieces = RubikCube.sidePieces;
-      this.projection = c;
-
-      if (!isValidProjection()) {
-        throw new InvalidDataException();
-      }
-    }
-
-    private bool isValidProjection() {
-      Dictionary<CubeFace, int> ct = new Dictionary<CubeFace, int>{
-                {CubeFace.L, 0},
-                {CubeFace.D, 0},
-                {CubeFace.R, 0},
-                {CubeFace.B, 0},
-                {CubeFace.F, 0},
-                {CubeFace.U, 0},
-                {CubeFace.None, 0},
-            };
-
-      for (int i = 0; i < sidePieces * 4; i++) {
-        for (int j = 0; j < sidePieces * 3; j++) {
-          ct[projection[i, j]]++;
-        }
-      }
-
-      foreach (var f in ct) {
-        if (f.Value != 9 && f.Key != CubeFace.None) {
-          return false;
-        }
-      }
-
-      return true;
-    }
-
-    private void createCube() {
       for (int i = 0; i < sidePieces * 4; i++) {
         for (int j = 0; j < sidePieces * 3; j++) {
           if (i < sidePieces && j >= sidePieces && j < sidePieces * 2) {
@@ -81,6 +42,42 @@ namespace Rubik2
           }
         }
       }
+    }
+
+    /// <summary> When Saved Cube is Loaded </summary>
+    //public Cube2D(CubeFace[,] c) {
+    //  this.sidePieces = RubikCube.sidePieces;
+    //  this.projection = c;
+
+    //  if (!isValidProjection()) {
+    //    throw new InvalidDataException();
+    //  }
+    //}
+
+    private bool isValidProjection() {
+      Dictionary<CubeFace, int> ct = new Dictionary<CubeFace, int>{
+                {CubeFace.L, 0},
+                {CubeFace.D, 0},
+                {CubeFace.R, 0},
+                {CubeFace.B, 0},
+                {CubeFace.F, 0},
+                {CubeFace.U, 0},
+                {CubeFace.None, 0},
+            };
+
+      for (int i = 0; i < sidePieces * 4; i++) {
+        for (int j = 0; j < sidePieces * 3; j++) {
+          ct[projection[i, j]]++;
+        }
+      }
+
+      foreach (var f in ct) {
+        if (f.Value != 9 && f.Key != CubeFace.None) {
+          return false;
+        }
+      }
+
+      return true;
     }
 
     public void rotate(KeyValuePair<Move, RotationDirection> move) {

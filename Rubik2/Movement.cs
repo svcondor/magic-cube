@@ -26,8 +26,8 @@ namespace Rubik2
   public enum RotationDirection
   {
     CounterClockWise = -1,
-    None,
-    ClockWise,
+    //None,
+    ClockWise = 1,
   }
 
   public struct SwipedFace
@@ -76,133 +76,133 @@ namespace Rubik2
       }
     }
 
-    public KeyValuePair<Move, RotationDirection> getMove() {
-      KeyValuePair<Move, RotationDirection> retval = new KeyValuePair<Move, RotationDirection>(Move.None, RotationDirection.None);
+    //public KeyValuePair<Move, RotationDirection> getMove() {
+    //  KeyValuePair<Move, RotationDirection> retval = new KeyValuePair<Move, RotationDirection>(Move.None, RotationDirection.None);
 
-      if (swipedFaces.Count < 3) {
-        return retval;
-      }
+    //  if (swipedFaces.Count < 3) {
+    //    return retval;
+    //  }
 
-      CubeFace f = getDominantFace();
+    //  CubeFace f = getDominantFace();
 
-      if (f == CubeFace.None) {
-        return retval;
-      }
+    //  if (f == CubeFace.None) {
+    //    return retval;
+    //  }
 
-      filterMoves(f);
-      SwipeDirection dir = getSingleDirection();
+    //  filterMoves(f);
+    //  SwipeDirection dir = getSingleDirection();
 
-      if (dir == SwipeDirection.None) {
-        return retval;
-      }
+    //  if (dir == SwipeDirection.None) {
+    //    return retval;
+    //  }
 
-      SwipedFace swipedFace = getSingleSwipedFace(dir);
+    //  SwipedFace swipedFace = getSingleSwipedFace(dir);
 
-      Debug.Print("face: {0}{1}{2}", swipedFace.face, swipedFace.direction, swipedFace.layer);
+    //  Debug.Print("face: {0}{1}{2}", swipedFace.face, swipedFace.direction, swipedFace.layer);
 
-      Move m = Move.None;
+    //  Move m = Move.None;
 
-      switch (swipedFace.face) {
-        case CubeFace.F:
-        case CubeFace.B:
-          switch (swipedFace.direction) {
-            case SwipeDirection.H:
-              switch (swipedFace.layer) {
-                case 0:
-                  m = Move.U;
-                  break;
-                case 1:
-                  m = Move.E;
-                  break;
-                case 2:
-                  m = Move.D;
-                  break;
-              }
-              break;
-            case SwipeDirection.V:
-              switch (swipedFace.layer) {
-                case 0:
-                  m = Move.L;
-                  break;
-                case 1:
-                  m = Move.M;
-                  break;
-                case 2:
-                  m = Move.R;
-                  break;
-              }
-              break;
-          }
-          break;
-        case CubeFace.R:
-        case CubeFace.L:
-          switch (swipedFace.direction) {
-            case SwipeDirection.H:
-              switch (swipedFace.layer) {
-                case 0:
-                  m = Move.D;
-                  break;
-                case 1:
-                  m = Move.E;
-                  break;
-                case 2:
-                  m = Move.U;
-                  break;
-              }
-              break;
-            case SwipeDirection.V:
-              switch (swipedFace.layer) {
-                case 0:
-                  m = Move.B;
-                  break;
-                case 1:
-                  m = Move.S;
-                  break;
-                case 2:
-                  m = Move.F;
-                  break;
-              }
-              break;
-          }
-          break;
-        case CubeFace.U:
-        case CubeFace.D:
-          switch (swipedFace.direction) {
-            case SwipeDirection.H:
-              switch (swipedFace.layer) {
-                case 0:
-                  m = Move.B;
-                  break;
-                case 1:
-                  m = Move.S;
-                  break;
-                case 2:
-                  m = Move.F;
-                  break;
-              }
-              break;
-            case SwipeDirection.V:
-              switch (swipedFace.layer) {
-                case 0:
-                  m = Move.L;
-                  break;
-                case 1:
-                  m = Move.M;
-                  break;
-                case 2:
-                  m = Move.R;
-                  break;
-              }
-              break;
-          }
-          break;
-      }
+    //  switch (swipedFace.face) {
+    //    case CubeFace.F:
+    //    case CubeFace.B:
+    //      switch (swipedFace.direction) {
+    //        case SwipeDirection.H:
+    //          switch (swipedFace.layer) {
+    //            case 0:
+    //              m = Move.U;
+    //              break;
+    //            case 1:
+    //              m = Move.E;
+    //              break;
+    //            case 2:
+    //              m = Move.D;
+    //              break;
+    //          }
+    //          break;
+    //        case SwipeDirection.V:
+    //          switch (swipedFace.layer) {
+    //            case 0:
+    //              m = Move.L;
+    //              break;
+    //            case 1:
+    //              m = Move.M;
+    //              break;
+    //            case 2:
+    //              m = Move.R;
+    //              break;
+    //          }
+    //          break;
+    //      }
+    //      break;
+    //    case CubeFace.R:
+    //    case CubeFace.L:
+    //      switch (swipedFace.direction) {
+    //        case SwipeDirection.H:
+    //          switch (swipedFace.layer) {
+    //            case 0:
+    //              m = Move.D;
+    //              break;
+    //            case 1:
+    //              m = Move.E;
+    //              break;
+    //            case 2:
+    //              m = Move.U;
+    //              break;
+    //          }
+    //          break;
+    //        case SwipeDirection.V:
+    //          switch (swipedFace.layer) {
+    //            case 0:
+    //              m = Move.B;
+    //              break;
+    //            case 1:
+    //              m = Move.S;
+    //              break;
+    //            case 2:
+    //              m = Move.F;
+    //              break;
+    //          }
+    //          break;
+    //      }
+    //      break;
+    //    case CubeFace.U:
+    //    case CubeFace.D:
+    //      switch (swipedFace.direction) {
+    //        case SwipeDirection.H:
+    //          switch (swipedFace.layer) {
+    //            case 0:
+    //              m = Move.B;
+    //              break;
+    //            case 1:
+    //              m = Move.S;
+    //              break;
+    //            case 2:
+    //              m = Move.F;
+    //              break;
+    //          }
+    //          break;
+    //        case SwipeDirection.V:
+    //          switch (swipedFace.layer) {
+    //            case 0:
+    //              m = Move.L;
+    //              break;
+    //            case 1:
+    //              m = Move.M;
+    //              break;
+    //            case 2:
+    //              m = Move.R;
+    //              break;
+    //          }
+    //          break;
+    //      }
+    //      break;
+    //  }
 
-      retval = new KeyValuePair<Move, RotationDirection>(m, getRotationDirection(swipedFace));
-      Debug.Print("Move: " + retval.ToString());
+    //  retval = new KeyValuePair<Move, RotationDirection>(m, getRotationDirection(swipedFace));
+    //  Debug.Print("Move: " + retval.ToString());
 
-      return retval;
-    }
+    //  return retval;
+    //}
 
     private SwipedFace getSingleSwipedFace(SwipeDirection dir) {
       return swipedFaces.Where(x => x.direction == dir).First();

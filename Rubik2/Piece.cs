@@ -20,9 +20,9 @@ namespace Rubik2
   }
 
   /// <summary>
-  /// Create a Piece
+  /// Create a single Piece
   /// 
-  /// In order to display the cube to a <see cref="ViewPort3D"/>:
+  /// In order to display the piece  to a <see cref="ViewPort3D"/>:
   /// <code>
   /// Cube c = new Cube(new Point3D(0, 0, 0), 1, new Dictionary&lt;CubeFace, Material&gt;() {
   ///     {CubeFace.F, new DiffuseMaterial(new SolidColorBrush(Colors.White))},
@@ -50,6 +50,7 @@ namespace Rubik2
     public HashSet<Move> possibleMoves = new HashSet<Move>();
     public Transform3DGroup rotations = new Transform3DGroup();
 
+
     /// <summary> Piece constructor </summary>
     /// <param name="o">The origin of the cube, this will always be the far-lower-left corner</param>
     /// <param name="f">This parameter allows the use of different materials on the cube's faces</param>
@@ -64,11 +65,11 @@ namespace Rubik2
         this.defaultMaterial = defaultMaterial;
       }
       this.Transform = this.rotations;
-      createCube();
+      createPiece();
     }
 
-    protected Piece() {
-    }
+    //protected Piece() {
+    //}
 
     /// <summary>
     /// Creates the cube by creating it's 6 faces
@@ -76,7 +77,7 @@ namespace Rubik2
     /// then each face will get the corespondent Material, 
     /// otherwise <see cref="defaultMaterial"/> will be used
     /// </summary>
-    protected virtual void createCube() {
+    void createPiece() {
       foreach (var face in Enum.GetValues(typeof(CubeFace)).Cast<CubeFace>()) {
         Material material;
         if (faces == null || !faces.TryGetValue(face, out material)) {
