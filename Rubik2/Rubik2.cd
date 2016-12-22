@@ -14,6 +14,13 @@
       <FileName>Cube.cs</FileName>
     </TypeIdentifier>
   </Class>
+  <Class Name="Rubik2.Cube2D">
+    <Position X="7.5" Y="1" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ABAAAAAAAAAQkAABAIDQA8AAABAABAAAgAAHAAAAAEE=</HashCode>
+      <FileName>Cube2D.cs</FileName>
+    </TypeIdentifier>
+  </Class>
   <Enum Name="Rubik2.CubeFace">
     <Position X="11.25" Y="1" Width="1.25" />
     <TypeIdentifier>

@@ -43,7 +43,7 @@ namespace Rubik2
     double edge_len = 1;
     double space = 0.1;  //Was 0.05
     double cubeLen;
-    int solveIndex;
+    //int solveIndex;
 
     Transform3DGroup rotations = new Transform3DGroup();
     RubikCube c;
@@ -79,7 +79,7 @@ namespace Rubik2
       this.mainViewport.Camera = camera;
 
       var camera2 = new PerspectiveCamera {
-        Position = new Point3D { X= -cameraDistance, Y = -cameraDistance, Z = -cameraDistance},
+        Position = new Point3D { X = -cameraDistance, Y = -cameraDistance, Z = -cameraDistance },
         LookDirection = new Vector3D(cameraDistance, cameraDistance, cameraDistance),
         //LookDirection = new Vector3D(0, 0, 0),
         //Position = cameraPos,
@@ -118,10 +118,10 @@ namespace Rubik2
       }
       c.rotate(moves);
       gameOver = false;
-      saveMenu.IsEnabled = true;
-      solveMenu.IsEnabled = true;
-      move1Menu.IsEnabled = true;
-      solveIndex = 0;
+      menuSave.IsEnabled = true;
+      menuSolve.IsEnabled = true;
+      //menuMove1.IsEnabled = true;
+      //solveIndex = 0;
     }
 
 
@@ -164,6 +164,7 @@ namespace Rubik2
     }
 
     private HitTestResultBehavior resultCb(HitTestResult r) {
+
       MyModelVisual3D model = r.VisualHit as MyModelVisual3D;
 
       if (model != null) {
@@ -200,8 +201,8 @@ namespace Rubik2
 
       if (c.isUnscrambled()) {
         gameOver = true;
-        saveMenu.IsEnabled = false;
-        solveMenu.IsEnabled = false;
+        menuSave.IsEnabled = false;
+        menuSolve.IsEnabled = false;
         Debug.Print("!!!!! GAME OVER !!!!!");
       }
 
@@ -225,13 +226,13 @@ namespace Rubik2
       rotations.Children.Clear();
       doneMoves.Clear();
 
-      solveMenu.IsEnabled = false;
+      menuSolve.IsEnabled = false;
 
       if (file != null) {
-        c = new RubikCube(IO.read(file, out doneMoves), size, new Point3D(-cubeLen / 2, -cubeLen / 2, -cubeLen / 2), TimeSpan.FromMilliseconds(370), edge_len, space);
+        c = new RubikCube(IO.read(file, out doneMoves), size, new Point3D(-cubeLen / 2, -cubeLen / 2, -cubeLen / 2), RubikCube.animationTime, edge_len, space);
       }
       else {
-        c = new RubikCube(size, new Point3D(-cubeLen / 2, -cubeLen / 2, -cubeLen / 2), TimeSpan.FromMilliseconds(370), edge_len, space);
+        c = new RubikCube(size, new Point3D(-cubeLen / 2, -cubeLen / 2, -cubeLen / 2), RubikCube.animationTime, edge_len, space);
       }
 
       c.Transform = rotations;
@@ -244,7 +245,7 @@ namespace Rubik2
       //this.backViewport.Children.Add(c);
       //this.mainViewport.Children.Add(touchFaces);
 
-      if (!enableAnimations.IsChecked) {
+      if (!menuEnableAnimations.IsChecked) {
         c.animationDuration = TimeSpan.FromMilliseconds(1);
       }
 
@@ -252,47 +253,47 @@ namespace Rubik2
         //scramble1(25);
       }
 
-      gameOver = false;
-      saveMenu.IsEnabled = true;
-      solveMenu.IsEnabled = true;
-      move1Menu.IsEnabled = true;
-      solveIndex = 0;
+      //gameOver = false;
+      //saveMenu.IsEnabled = true;
+      //solveMenu.IsEnabled = true;
+      //move1Menu.IsEnabled = true;
+      //solveIndex = 0;
 
       gameOver = true;
-      solveMenu.IsEnabled = false;
-      saveMenu.IsEnabled = false;
-      move1Menu.IsEnabled = false;
+      menuSolve.IsEnabled = false;
+      //menuSave.IsEnabled = false;
+      //menuMove1.IsEnabled = false;
 
     }
 
-    private void enableAnimations_Checked(object sender, RoutedEventArgs e) {
+    private void menuEnableAnimations_Checked(object sender, RoutedEventArgs e) {
       if (c != null) {
-        c.animationDuration = TimeSpan.FromMilliseconds(370);
+        c.animationDuration = RubikCube.animationTime;
       }
     }
 
-    private void enableAnimations_Unchecked(object sender, RoutedEventArgs e) {
+    private void menuEnableAnimations_Unchecked(object sender, RoutedEventArgs e) {
       if (c != null) {
         c.animationDuration = TimeSpan.FromMilliseconds(1);
       }
     }
 
-    private void saveMenu_Click(object sender, RoutedEventArgs e) {
-      SaveFileDialog dlg = new SaveFileDialog();
-      dlg.FileName = DateTime.Now.ToString("dd-MM-yy Hmm");
-      dlg.DefaultExt = ".rubik";
-      dlg.Filter = "Magic Cube Save Files (.rubik)|*.rubik";
-
+    private void menuSave_Click(object sender, RoutedEventArgs e) {
+      SaveFileDialog dlg = new SaveFileDialog() {
+        FileName = DateTime.Now.ToString("dd-MM-yy Hmm"),
+        DefaultExt = ".rubik",
+        Filter = "Magic Cube Save Files (.rubik)|*.rubik"
+      };
       if (true == dlg.ShowDialog()) {
         IO.save(dlg.FileName, c.projection.projection, doneMoves);
       }
     }
 
-    private void loadMenu_Click(object sender, RoutedEventArgs e) {
-      OpenFileDialog dlg = new OpenFileDialog();
-      dlg.DefaultExt = ".rubik";
-      dlg.Filter = "Magic Cube Save Files (.rubik)|*.rubik";
-
+    private void menuLoad_Click(object sender, RoutedEventArgs e) {
+      OpenFileDialog dlg = new OpenFileDialog() {
+        DefaultExt = ".rubik",
+        Filter = "Magic Cube Save Files (.rubik)|*.rubik"
+      };
       if (true == dlg.ShowDialog()) {
         try {
           init(dlg.FileName);
@@ -309,21 +310,21 @@ namespace Rubik2
       }
     }
 
-    private void Move1Menu_Click(object sender, RoutedEventArgs e) {
-      if (gameOver == false && solveIndex == 0) {
-        solveMenu.IsEnabled = false;
-        saveMenu.IsEnabled = false;
-      }
-      List<KeyValuePair<Move, RotationDirection>> m1 = new List<KeyValuePair<Move, RotationDirection>>();
-      int i = doneMoves.Count - 1 - solveIndex;
-      m1.Add(new KeyValuePair<Move, RotationDirection>(doneMoves[i].Key, (RotationDirection)(-1 * (int)doneMoves[i].Value)));
-      ++solveIndex;
-      if (solveIndex >= doneMoves.Count) {
-        gameOver = true;
-        move1Menu.IsEnabled = false;
-      }
-      c.rotate(m1);
-    }
+    //private void menuMove1_Click(object sender, RoutedEventArgs e) {
+    //  if (gameOver == false && solveIndex == 0) {
+    //    menuSolve.IsEnabled = false;
+    //    menuSave.IsEnabled = false;
+    //  }
+    //  List<KeyValuePair<Move, RotationDirection>> m1 = new List<KeyValuePair<Move, RotationDirection>>();
+    //  int i = doneMoves.Count - 1 - solveIndex;
+    //  m1.Add(new KeyValuePair<Move, RotationDirection>(doneMoves[i].Key, (RotationDirection)(-1 * (int)doneMoves[i].Value)));
+    //  ++solveIndex;
+    //  if (solveIndex >= doneMoves.Count) {
+    //    gameOver = true;
+    //    menuMove1.IsEnabled = false;
+    //  }
+    //  c.rotate(m1);
+    //}
 
     public static int viewTableIx = 0;
     public static string[] viewTable = new string[] {
@@ -362,7 +363,7 @@ namespace Rubik2
 
     private void btnRun_Click(object sender, RoutedEventArgs e) {
       string moves = txtMoves.Text;
-      List<KeyValuePair<Move, RotationDirection>> moveList 
+      List<KeyValuePair<Move, RotationDirection>> moveList
         = new List<KeyValuePair<Move, RotationDirection>>();
       for (int i = 0; i < moves.Length; ++i) {
         string move2 = moves.Substring(i, 1).ToUpper();
@@ -375,10 +376,12 @@ namespace Rubik2
           handleMove(moveList, move2);
         }
       }
-      c.rotate(moveList);
+      if (moveList.Count > 0) {
+        c.rotate(moveList);
+      }
     }
 
-    private void singleMove_Click(object sender, RoutedEventArgs e) {
+    private void singleMove(object sender, RoutedEventArgs e) {
       Button button = (Button)e.OriginalSource;
       string buttonContent = (string)button.Content;
       List<KeyValuePair<Move, RotationDirection>> moveList
@@ -388,7 +391,7 @@ namespace Rubik2
     }
 
     private void handleMove(List<KeyValuePair<Move, RotationDirection>> moveList, string moveString) {
-      string moveString1 = moveString.Substring(0,1).ToUpper();
+      string moveString1 = moveString.Substring(0, 1).ToUpper();
       RotationDirection d = RotationDirection.ClockWise;
       if (moveString.Length == 2 && moveString.Substring(1, 1) == "'") {
         d = RotationDirection.CounterClockWise;
@@ -401,24 +404,24 @@ namespace Rubik2
       string move1 = viewTable[0].Substring(ix, 1);
       Move move = (Move)Enum.Parse(typeof(Move), move1);
       KeyValuePair<Move, RotationDirection> m = new KeyValuePair<Move, RotationDirection>(move, d);
-      moveList.Add(m); 
+      moveList.Add(m);
     }
 
     private void lstMoves_SelectionChanged(object sender, SelectionChangedEventArgs e) {
       txtMoves.Text = ((ListBoxItem)lstMoves.SelectedValue).Content.ToString();
     }
 
-    private void reset_Click(object sender, RoutedEventArgs e) {
+    private void menuReset_Click(object sender, RoutedEventArgs e) {
       viewTableIx = 0;
       init();
 
     }
 
-    private void solveMenu_Click(object sender, RoutedEventArgs e) {
+    private void menuSolve_Click(object sender, RoutedEventArgs e) {
       gameOver = true;
-      solveMenu.IsEnabled = false;
-      saveMenu.IsEnabled = false;
-      move1Menu.IsEnabled = false;
+      menuSolve.IsEnabled = false;
+      //menuSave.IsEnabled = false;
+      //menuMove1.IsEnabled = false;
 
       List<KeyValuePair<Move, RotationDirection>> m = new List<KeyValuePair<Move, RotationDirection>>();
 
@@ -428,9 +431,11 @@ namespace Rubik2
       c.rotate(m);
     }
 
-    private void newGame_Click(object sender, RoutedEventArgs e) {
+    private void menuScramble_Click(object sender, RoutedEventArgs e) {
+
       viewTableIx = 0;
       init();
+      c.animationDuration = TimeSpan.FromMilliseconds(1);
       scramble1(25);
     }
   }

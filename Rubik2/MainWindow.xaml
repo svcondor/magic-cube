@@ -18,16 +18,16 @@
     </Grid.RowDefinitions>
     <Menu IsMainMenu="True" Grid.ColumnSpan="2">
       <MenuItem Header="_File">
-        <MenuItem Header="Animations" IsCheckable="True" IsChecked="True" Name="enableAnimations" Checked="enableAnimations_Checked" Unchecked="enableAnimations_Unchecked" />
+        <MenuItem Header="Animations" IsCheckable="True" IsChecked="True" Name="menuEnableAnimations" Checked="menuEnableAnimations_Checked" Unchecked="menuEnableAnimations_Unchecked" />
         <Separator />
-        <MenuItem Header="Save" Name="saveMenu" Click="saveMenu_Click" />
-        <MenuItem Header="Load" Name="loadMenu" Click="loadMenu_Click" />
+        <MenuItem Header="Save" Name="menuSave" Click="menuSave_Click" />
+        <MenuItem Header="Load" Name="loadMenu" Click="menuLoad_Click" />
       </MenuItem>
-      <MenuItem Header="Reset"  Name="reset" Click="reset_Click"/>
-      <MenuItem Header="_New Game" Click="newGame_Click" Name="newGame">
+      <MenuItem Header="Reset"  Click="menuReset_Click"/>
+      <MenuItem Header="_New Game" Click="menuScramble_Click">
       </MenuItem>
-      <MenuItem Header="Solve it!" Name="solveMenu" Click="solveMenu_Click" IsEnabled="False" />
-      <MenuItem Header="Move 1" Name="move1Menu" Click="Move1Menu_Click"/>
+      <MenuItem Header="Solve" Name="menuSolve" Click="menuSolve_Click" IsEnabled="False" />
+      <!--<MenuItem Header="Move 1" Name="menuMove1" Click="menuMove1_Click"/>-->
     </Menu>
     <StackPanel Grid.Row="1">
       <Button Name="btnRotate" Click="btnRotate_Click">Rotate</Button>
@@ -50,20 +50,20 @@
           <ColumnDefinition Width="1*"/>
         </Grid.ColumnDefinitions>
         <StackPanel>
-          <Button Content="U" Click="singleMove_Click" />
-          <Button Content="L" Click="singleMove_Click" />
-          <Button Content="F" Click="singleMove_Click" />
-          <Button Content="R" Click="singleMove_Click" />
-          <Button Content="B" Click="singleMove_Click" />
-          <Button Content="D" Click="singleMove_Click" />
+          <Button Content="U" Click="singleMove" />
+          <Button Content="L" Click="singleMove" />
+          <Button Content="F" Click="singleMove" />
+          <Button Content="R" Click="singleMove" />
+          <Button Content="B" Click="singleMove" />
+          <Button Content="D" Click="singleMove" />
         </StackPanel>
         <StackPanel Grid.Column="1">
-          <Button Content="U'" Click="singleMove_Click" />
-          <Button Content="L'" Click="singleMove_Click" />
-          <Button Content="F'" Click="singleMove_Click" />
-          <Button Content="R'" Click="singleMove_Click" />
-          <Button Content="B'" Click="singleMove_Click" />
-          <Button Content="D'" Click="singleMove_Click" />
+          <Button Content="U'" Click="singleMove" />
+          <Button Content="L'" Click="singleMove" />
+          <Button Content="F'" Click="singleMove" />
+          <Button Content="R'" Click="singleMove" />
+          <Button Content="B'" Click="singleMove" />
+          <Button Content="D'" Click="singleMove" />
         </StackPanel>
       </Grid>
     </StackPanel>

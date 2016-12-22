@@ -8,28 +8,30 @@ using System.Windows.Threading;
 
 namespace Rubik2
 {
-  public class RubikCube : Cube {
-        private int size;
-        private Point3D origin;
+  public class RubikCube : Cube
+  {
+    private int size;
+    private Point3D origin;
 
-        /// <summary>
-        /// Length of the cube edge
-        /// </summary>
-        private double edge_len;
+    /// <summary>
+    /// Length of the cube edge
+    /// </summary>
+    private double edge_len;
 
-        /// <summary>
-        /// Space between the cubes forming the bigger cube
-        /// </summary>
-        private double space;
+    /// <summary>
+    /// Space between the cubes forming the bigger cube
+    /// </summary>
+    private double space;
 
-        public Cube2D projection;
-        public TimeSpan animationDuration;
+    public Cube2D projection;
+    public static TimeSpan animationTime = TimeSpan.FromMilliseconds(300);
+    public TimeSpan animationDuration;
 
-        private List<KeyValuePair<Move, RotationDirection>> moves;
-        int index;
-        bool animation_lock = false;
+    private List<KeyValuePair<Move, RotationDirection>> moves;
+    int index;
+    bool animation_lock = false;
 
-        private Dictionary<CubeFace, Material> faceColors = new Dictionary<CubeFace, Material> {
+    private Dictionary<CubeFace, Material> faceColors = new Dictionary<CubeFace, Material> {
             {CubeFace.L, new DiffuseMaterial(new SolidColorBrush(Colors.Red))},
             {CubeFace.D, new DiffuseMaterial(new SolidColorBrush(Colors.Yellow))},
             {CubeFace.B, new DiffuseMaterial(new SolidColorBrush(Colors.Green))},
@@ -37,148 +39,148 @@ namespace Rubik2
             {CubeFace.U, new DiffuseMaterial(new SolidColorBrush(Colors.White))},
             {CubeFace.F, new DiffuseMaterial(new SolidColorBrush(Colors.Blue))}
         };
-        //public RubikCube() {
-        //  createCube();
-        //}
-        public RubikCube(int size, Point3D o, TimeSpan duration, double len = 1, double space = 0.1) {
-            this.size = size;
-            this.origin = o;
-            this.edge_len = len;
-            this.space = space;
-            this.projection = new Cube2D(size);
-            this.animationDuration = duration;
+    //public RubikCube() {
+    //  createCube();
+    //}
+    public RubikCube(int size, Point3D o, TimeSpan duration, double len = 1, double space = 0.1) {
+      this.size = size;
+      this.origin = o;
+      this.edge_len = len;
+      this.space = space;
+      this.projection = new Cube2D(size);
+      this.animationDuration = duration;
 
-            createCube();
+      createCube();
+    }
+
+    public RubikCube(CubeFace[,] projection, int size, Point3D o, TimeSpan duration, double len = 1, double space = 0.1) {
+      this.size = size;
+      this.origin = o;
+      this.edge_len = len;
+      this.space = space;
+      this.projection = new Cube2D(size, projection);
+      this.animationDuration = duration;
+
+      createCubeFromProjection();
+    }
+
+    private void createCubeFromProjection() {
+      Cube c;
+      Dictionary<CubeFace, Material> colors;
+
+      double x_offset, y_offset, z_offset;
+
+      for (int y = 0; y < size; y++) {
+        for (int z = 0; z < size; z++) {
+          for (int x = 0; x < size; x++) {
+            if (y == 1 && x == 1 && z == 1) {
+              continue;
+            }
+
+            x_offset = (edge_len + space) * x;
+            y_offset = (edge_len + space) * y;
+            z_offset = (edge_len + space) * z;
+
+            Point3D p = new Point3D(origin.X + x_offset, origin.Y + y_offset, origin.Z + z_offset);
+
+            colors = setFaceColorsFromProjection(x, y, z, projection.projection);
+
+            c = new Cube(p, edge_len, colors, getPossibleMoves(x, y, z));
+            this.Children.Add(c);
+          }
         }
+      }
+    }
 
-        public RubikCube(CubeFace[,] projection, int size, Point3D o, TimeSpan duration, double len = 1, double space = 0.1) {
-            this.size = size;
-            this.origin = o;
-            this.edge_len = len;
-            this.space = space;
-            this.projection = new Cube2D(size, projection);
-            this.animationDuration = duration;
+    protected override void createCube() {
+      Cube c;
+      Dictionary<CubeFace, Material> colors;
 
-            createCubeFromProjection();
+      double x_offset, y_offset, z_offset;
+
+      for (int y = 0; y < size; y++) {
+        for (int z = 0; z < size; z++) {
+          for (int x = 0; x < size; x++) {
+            if (y == 1 && x == 1 && z == 1) {
+              continue;
+            }
+
+            x_offset = (edge_len + space) * x;
+            y_offset = (edge_len + space) * y;
+            z_offset = (edge_len + space) * z;
+
+            Point3D p = new Point3D(origin.X + x_offset, origin.Y + y_offset, origin.Z + z_offset);
+
+            colors = setFaceColors(x, y, z);
+
+            c = new Cube(p, edge_len, colors, getPossibleMoves(x, y, z));
+            this.Children.Add(c);
+          }
         }
+      }
+    }
 
-        private void createCubeFromProjection() {
-            Cube c;
-            Dictionary<CubeFace, Material> colors;
+    private HashSet<Move> getPossibleMoves(int x, int y, int z) {
+      HashSet<Move> moves = new HashSet<Move>();
 
-            double x_offset, y_offset, z_offset;
+      if (y == 0) {
+        moves.Add(Move.D);
+      }
+      else if (y == size - 1) {
+        moves.Add(Move.U);
+      }
+      else {
+        moves.Add(Move.E);
+      }
 
-            for (int y = 0; y < size; y++) {
-                for (int z = 0; z < size; z++) {
-                    for (int x = 0; x < size; x++) {
-                        if (y == 1 && x == 1 && z == 1) {
-                            continue;
-                        }
+      if (x == 0) {
+        moves.Add(Move.L);
+      }
+      else if (x == size - 1) {
+        moves.Add(Move.R);
+      }
+      else {
+        moves.Add(Move.M);
+      }
 
-                        x_offset = (edge_len + space) * x;
-                        y_offset = (edge_len + space) * y;
-                        z_offset = (edge_len + space) * z;
+      if (z == 0) {
+        moves.Add(Move.B);
+      }
+      else if (z == size - 1) {
+        moves.Add(Move.F);
+      }
+      else {
+        moves.Add(Move.S);
+      }
 
-                        Point3D p = new Point3D(origin.X + x_offset, origin.Y + y_offset, origin.Z + z_offset);
+      return moves;
+    }
 
-                        colors = setFaceColorsFromProjection(x, y, z, projection.projection);
+    public void rotate(List<KeyValuePair<Move, RotationDirection>> moves) {
+      if (animation_lock) {
+        return;
+      }
 
-                        c = new Cube(p, edge_len, colors, getPossibleMoves(x, y, z));
-                        this.Children.Add(c);
-                    }
-                }
-            }
-        }
+      animation_lock = true;
+      index = 0;
+      this.moves = moves;
 
-        protected override void createCube() {
-            Cube c;
-            Dictionary<CubeFace, Material> colors;
+      animate(index);
+      index++;
+    }
 
-            double x_offset, y_offset, z_offset;
+    void animation_Completed(object sender, EventArgs e) {
+      if (index < moves.Count) {
+        animate(index);
+        index++;
+      }
+      else {
+        animation_lock = false;
+      }
+    }
 
-            for (int y = 0; y < size; y++) {
-                for (int z = 0; z < size; z++) {
-                    for (int x = 0; x < size; x++) {
-                         if (y == 1 && x == 1 && z == 1) {
-                             continue;
-                        }
-
-                        x_offset = (edge_len + space) * x;
-                        y_offset = (edge_len + space) * y;
-                        z_offset = (edge_len + space) * z;
-
-                        Point3D p = new Point3D(origin.X + x_offset, origin.Y + y_offset, origin.Z + z_offset);
-
-                        colors = setFaceColors(x, y, z);
-
-                        c = new Cube(p, edge_len, colors, getPossibleMoves(x, y, z));
-                        this.Children.Add(c);
-                    }
-                }
-            }
-        }
-
-        private HashSet<Move> getPossibleMoves(int x, int y, int z){
-            HashSet<Move> moves =  new HashSet<Move>();
-
-            if (y == 0) {
-                moves.Add(Move.D);
-            }
-            else if (y == size - 1) {
-                moves.Add(Move.U);
-            }
-            else {
-                moves.Add(Move.E);
-            }
-
-            if (x == 0) {
-                moves.Add(Move.L);
-            }
-            else if (x == size - 1) {
-                moves.Add(Move.R);
-            }
-            else {
-                moves.Add(Move.M);
-            }
-
-            if (z == 0) {
-                moves.Add(Move.B);
-            }
-            else if (z == size - 1) {
-                moves.Add(Move.F);
-            }
-            else {
-                moves.Add(Move.S);
-            }
-
-            return moves;
-        }
-
-        public void rotate(List<KeyValuePair<Move, RotationDirection>> moves) {
-            if (animation_lock) {
-                return;
-            }
-
-            animation_lock = true;
-            index = 0;
-            this.moves = moves;
-
-            animate(index);
-            index++;
-        }
-
-        void animation_Completed(object sender, EventArgs e) {
-            if (index < moves.Count) {
-                animate(index);
-                index++;
-            }
-            else {
-                animation_lock = false;
-            }
-        }
-
-        void animate(int i) {
-            Dictionary<Move, CubeFace> dominantFaces = new Dictionary<Move, CubeFace> {
+    void animate(int i) {
+      Dictionary<Move, CubeFace> dominantFaces = new Dictionary<Move, CubeFace> {
                 {Move.B, CubeFace.R},
                 {Move.D, CubeFace.R},
                 {Move.E, CubeFace.R},
@@ -190,39 +192,53 @@ namespace Rubik2
                 {Move.U, CubeFace.F},
             };
 
-            HashSet<Move> possibleMoves = new HashSet<Move>();
-            Vector3D axis = new Vector3D();
-            double angle = 90 * Convert.ToInt32(moves[i].Value);
+      HashSet<Move> possibleMoves = new HashSet<Move>();
+      Vector3D axis = new Vector3D();
+      double angle = 90 * Convert.ToInt32(moves[i].Value);
 
-            axis = getRotationAxis(moves[i].Key);
+      axis = getRotationAxis(moves[i].Key);
 
-            AxisAngleRotation3D rotation = new AxisAngleRotation3D(axis, angle);
-            RotateTransform3D transform = new RotateTransform3D(rotation, new Point3D(0, 0, 0));
+      AxisAngleRotation3D rotation = new AxisAngleRotation3D(axis, angle);
+      RotateTransform3D transform = new RotateTransform3D(rotation, new Point3D(0, 0, 0));
 
-            DoubleAnimation animation = new DoubleAnimation(0, angle, animationDuration);
+      DoubleAnimation animation = new DoubleAnimation(0, angle, animationDuration);
 
-            foreach (Cube c in this.Children) {
-                possibleMoves = new HashSet<Move>(c.possibleMoves);
-                possibleMoves.Remove((Move)dominantFaces[moves[i].Key]);
+      foreach (Cube c in this.Children) {
+        possibleMoves = new HashSet<Move>(c.possibleMoves);
+        possibleMoves.Remove((Move)dominantFaces[moves[i].Key]);
 
-                if (possibleMoves.Contains(moves[i].Key)) {
-                    c.possibleMoves = getNextPossibleMoves(c.possibleMoves, moves[i].Key, moves[i].Value);
-                    c.rotations.Children.Add(transform);
-                    rotation.BeginAnimation(AxisAngleRotation3D.AngleProperty, animation);
-                }
-            }
-
-            animation.Completed += new EventHandler(animation_Completed);
-            rotation.BeginAnimation(AxisAngleRotation3D.AngleProperty, animation);
-            projection.rotate(moves[i]);
+        if (possibleMoves.Contains(moves[i].Key)) {
+          c.possibleMoves = getNextPossibleMoves(c.possibleMoves, moves[i].Key, moves[i].Value);
+          c.rotations.Children.Add(transform);
+          rotation.BeginAnimation(AxisAngleRotation3D.AngleProperty, animation);
         }
+      }
+      //animation.Completed += new EventHandler(animation_Completed);
+      animation.Completed += (sender, eventArgs) => {
+        if (moves.Count == 25 && i >= 24) {
+          animationDuration = RubikCube.animationTime;
+        }
+        if (index < moves.Count) {
+          animate(index);
+          index++;
+        }
+        else {
+          animation_lock = false;
+        }
+      };
 
-        public bool rotate(KeyValuePair<Move, RotationDirection> move) {
-            if (animation_lock) {
-                return false;
-            }
 
-            Dictionary<Move, CubeFace> dominantFaces = new Dictionary<Move, CubeFace> {
+
+      rotation.BeginAnimation(AxisAngleRotation3D.AngleProperty, animation);
+      projection.rotate(moves[i]);
+    }
+
+    public bool rotate(KeyValuePair<Move, RotationDirection> move) {
+      if (animation_lock) {
+        return false;
+      }
+
+      Dictionary<Move, CubeFace> dominantFaces = new Dictionary<Move, CubeFace> {
                 {Move.B, CubeFace.R},
                 {Move.D, CubeFace.R},
                 {Move.E, CubeFace.R},
@@ -234,31 +250,31 @@ namespace Rubik2
                 {Move.U, CubeFace.F},
             };
 
-            HashSet<Move> possibleMoves = new HashSet<Move>();
-            Vector3D axis = getRotationAxis(move.Key);
-            
-            double angle = 90 * Convert.ToInt32(move.Value);
+      HashSet<Move> possibleMoves = new HashSet<Move>();
+      Vector3D axis = getRotationAxis(move.Key);
 
-            AxisAngleRotation3D rotation = new AxisAngleRotation3D(axis, angle);
-            RotateTransform3D transform = new RotateTransform3D(rotation, new Point3D(0, 0, 0));
+      double angle = 90 * Convert.ToInt32(move.Value);
 
-            DoubleAnimation animation = new DoubleAnimation(0, angle, animationDuration);
-            
-            foreach(Cube c in this.Children){
-                possibleMoves = new HashSet<Move>(c.possibleMoves);
-                possibleMoves.Remove((Move)dominantFaces[move.Key]);
-                if(possibleMoves.Contains(move.Key)){
-                    c.possibleMoves = getNextPossibleMoves(c.possibleMoves, move.Key, move.Value);
+      AxisAngleRotation3D rotation = new AxisAngleRotation3D(axis, angle);
+      RotateTransform3D transform = new RotateTransform3D(rotation, new Point3D(0, 0, 0));
 
-                    c.rotations.Children.Add(transform);
-                }
-            }
+      DoubleAnimation animation = new DoubleAnimation(0, angle, animationDuration);
 
-            projection.rotate(move);
-            rotation.BeginAnimation(AxisAngleRotation3D.AngleProperty, animation);
-            App.Current.Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, new Action(() => { })).Wait();
+      foreach (Cube c in this.Children) {
+        possibleMoves = new HashSet<Move>(c.possibleMoves);
+        possibleMoves.Remove((Move)dominantFaces[move.Key]);
+        if (possibleMoves.Contains(move.Key)) {
+          c.possibleMoves = getNextPossibleMoves(c.possibleMoves, move.Key, move.Value);
+
+          c.rotations.Children.Add(transform);
+        }
+      }
+
+      projection.rotate(move);
+      rotation.BeginAnimation(AxisAngleRotation3D.AngleProperty, animation);
+      App.Current.Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, new Action(() => { })).Wait();
       return true;
-        }
+    }
 
     public bool rotateAll(KeyValuePair<Move, RotationDirection> move) {
       if (animation_lock) {
@@ -304,8 +320,8 @@ namespace Rubik2
       return true;
     }
 
-      private Vector3D getRotationAxis(Move m){
-            Vector3D axis = new Vector3D();
+    private Vector3D getRotationAxis(Move m) {
+      Vector3D axis = new Vector3D();
       var viewTableIx = MainWindow.viewTableIx;
       var viewTable = MainWindow.viewTable;
       string move2 = m.ToString();
@@ -315,47 +331,47 @@ namespace Rubik2
       // ix = 1 D => D !!
       Debug.WriteLine($"getRotationAxis VTIX={viewTableIx} {m}=>{move}");
       switch (move) {
-                case Move.F:
-                case Move.S:
-                    axis.X = 0;
-                    axis.Y = 0;
-                    axis.Z = -1;
-                    break;
-                case Move.R:
-                    axis.X = -1;
-                    axis.Y = 0;
-                    axis.Z = 0;
-                    break;
-                case Move.B:
-                    axis.X = 0;
-                    axis.Y = 0;
-                    axis.Z = 1;
-                    break;
-                case Move.L:
-                case Move.M:
-                    axis.X = 1;
-                    axis.Y = 0;
-                    axis.Z = 0;
-                    break;
-                case Move.U:
-                    axis.X = 0;
-                    axis.Y = -1;
-                    axis.Z = 0;
-                    break;
-                case Move.D:
-                case Move.E:
-                    axis.X = 0;
-                    axis.Y = 1;
-                    axis.Z = 0;
-                    break;
-            }
+        case Move.F:
+        case Move.S:
+          axis.X = 0;
+          axis.Y = 0;
+          axis.Z = -1;
+          break;
+        case Move.R:
+          axis.X = -1;
+          axis.Y = 0;
+          axis.Z = 0;
+          break;
+        case Move.B:
+          axis.X = 0;
+          axis.Y = 0;
+          axis.Z = 1;
+          break;
+        case Move.L:
+        case Move.M:
+          axis.X = 1;
+          axis.Y = 0;
+          axis.Z = 0;
+          break;
+        case Move.U:
+          axis.X = 0;
+          axis.Y = -1;
+          axis.Z = 0;
+          break;
+        case Move.D:
+        case Move.E:
+          axis.X = 0;
+          axis.Y = 1;
+          axis.Z = 0;
+          break;
+      }
 
-            return axis;
-        }
+      return axis;
+    }
 
-        private HashSet<Move> getNextPossibleMoves(HashSet<Move>moves, Move m, RotationDirection direction){
-            //HashSet<Move> iMoves = new HashSet<Move>(moves);
-             Dictionary<Move, List<List<Move>>> substitutions = new Dictionary<Move, List<List<Move>>> {
+    private HashSet<Move> getNextPossibleMoves(HashSet<Move> moves, Move m, RotationDirection direction) {
+      //HashSet<Move> iMoves = new HashSet<Move>(moves);
+      Dictionary<Move, List<List<Move>>> substitutions = new Dictionary<Move, List<List<Move>>> {
                 {Move.F, new List<List<Move>>{
                     new List<Move>{Move.U, Move.L, Move.U, Move.R},
                     new List<Move>{Move.U, Move.R, Move.D, Move.R},
@@ -385,7 +401,7 @@ namespace Rubik2
                     new List<Move>{Move.S, Move.R, Move.M, Move.F},
                     new List<Move>{Move.M, Move.F, Move.L, Move.S},
                     new List<Move>{Move.L, Move.S, Move.B, Move.M},
-                }},                
+                }},
                 {Move.D, new List<List<Move>>{
                     new List<Move>{Move.R, Move.B, Move.L, Move.B},
                     new List<Move>{Move.R, Move.F, Move.R, Move.B},
@@ -405,7 +421,7 @@ namespace Rubik2
                     new List<Move>{Move.E, Move.F, Move.D, Move.S},
                     new List<Move>{Move.D, Move.S, Move.B, Move.E},
                     new List<Move>{Move.B, Move.E, Move.S, Move.U},
-                }},  
+                }},
                 {Move.R, new List<List<Move>>{
                     new List<Move>{Move.U, Move.F, Move.U, Move.B},
                     new List<Move>{Move.D, Move.F, Move.U, Move.F},
@@ -415,7 +431,7 @@ namespace Rubik2
                     new List<Move>{Move.S, Move.D, Move.F, Move.E},
                     new List<Move>{Move.E, Move.B, Move.S, Move.D},
                     new List<Move>{Move.U, Move.S, Move.E, Move.B},
-                }},                
+                }},
                 {Move.M, new List<List<Move>>{
                     new List<Move>{Move.U, Move.F, Move.D, Move.F},
                     new List<Move>{Move.D, Move.F, Move.D, Move.B},
@@ -425,7 +441,7 @@ namespace Rubik2
                     new List<Move>{Move.D, Move.S, Move.B, Move.E},
                     new List<Move>{Move.B, Move.E, Move.U, Move.S},
                     new List<Move>{Move.U, Move.S, Move.E, Move.F},
-                }},         
+                }},
                 {Move.E, new List<List<Move>>{
                     new List<Move>{Move.L, Move.F, Move.R, Move.F},
                     new List<Move>{Move.R, Move.F, Move.R, Move.B},
@@ -435,7 +451,7 @@ namespace Rubik2
                     new List<Move>{Move.R, Move.S, Move.B, Move.M},
                     new List<Move>{Move.B, Move.M, Move.L, Move.S},
                     new List<Move>{Move.L, Move.S, Move.M, Move.F},
-                }},         
+                }},
                 {Move.S, new List<List<Move>>{
                     new List<Move>{Move.U, Move.R, Move.D, Move.R},
                     new List<Move>{Move.D, Move.R, Move.D, Move.L},
@@ -448,75 +464,75 @@ namespace Rubik2
                 }},
             };
 
-            foreach (List<Move> s in substitutions[m]) {
-                if (direction == RotationDirection.ClockWise) {
-                    if (moves.Contains(s[0]) && moves.Contains(s[1])) {
-                        moves.Remove(s[0]);
-                        moves.Add(s[2]);
+      foreach (List<Move> s in substitutions[m]) {
+        if (direction == RotationDirection.ClockWise) {
+          if (moves.Contains(s[0]) && moves.Contains(s[1])) {
+            moves.Remove(s[0]);
+            moves.Add(s[2]);
 
-                        moves.Remove(s[1]);
-                        moves.Add(s[3]);
+            moves.Remove(s[1]);
+            moves.Add(s[3]);
 
-                        break;
-                    }
-                }
-                else {
-                    if (moves.Contains(s[2]) && moves.Contains(s[3])) {
-                        moves.Remove(s[2]);
-                        moves.Add(s[0]);
-
-                        moves.Remove(s[3]);
-                        moves.Add(s[1]);
-
-                        break;
-                    }
-                }
-            }
-
-            /*
-            if (moves.Count != 3) {
-                if(true){}
-            }
-            */
-            return moves;
+            break;
+          }
         }
+        else {
+          if (moves.Contains(s[2]) && moves.Contains(s[3])) {
+            moves.Remove(s[2]);
+            moves.Add(s[0]);
 
-        public bool isUnscrambled() {
-            return projection.isUnscrambled();
+            moves.Remove(s[3]);
+            moves.Add(s[1]);
+
+            break;
+          }
         }
+      }
 
-        private Dictionary<CubeFace, Material> setFaceColors(int x, int y, int z){
-            Dictionary<CubeFace, Material> colors = new Dictionary<CubeFace,Material>();
+      /*
+      if (moves.Count != 3) {
+          if(true){}
+      }
+      */
+      return moves;
+    }
 
-            if (x == 0) {
-                colors.Add(CubeFace.L, faceColors[CubeFace.L]);
-            }
+    public bool isUnscrambled() {
+      return projection.isUnscrambled();
+    }
 
-            if (y == 0) {
-                colors.Add(CubeFace.D, faceColors[CubeFace.D]);
-            }
+    private Dictionary<CubeFace, Material> setFaceColors(int x, int y, int z) {
+      Dictionary<CubeFace, Material> colors = new Dictionary<CubeFace, Material>();
 
-            if (z == 0) {
-                colors.Add(CubeFace.B, faceColors[CubeFace.B]);
-            }
+      if (x == 0) {
+        colors.Add(CubeFace.L, faceColors[CubeFace.L]);
+      }
 
-            if (x == size-1) {
-                colors.Add(CubeFace.R, faceColors[CubeFace.R]);
-            }
+      if (y == 0) {
+        colors.Add(CubeFace.D, faceColors[CubeFace.D]);
+      }
 
-            if (y == size - 1) {
-                colors.Add(CubeFace.U, faceColors[CubeFace.U]);
-            }
+      if (z == 0) {
+        colors.Add(CubeFace.B, faceColors[CubeFace.B]);
+      }
 
-            if (z == size - 1) {
-                colors.Add(CubeFace.F, faceColors[CubeFace.F]);
-            }
+      if (x == size - 1) {
+        colors.Add(CubeFace.R, faceColors[CubeFace.R]);
+      }
 
-            return colors;
-        }
+      if (y == size - 1) {
+        colors.Add(CubeFace.U, faceColors[CubeFace.U]);
+      }
 
-        private Dictionary<CubeFace, Material> setFaceColorsFromProjection(int x, int y, int z, CubeFace[,] p) {
-            Dictionary<Tuple<int, int, int>, Dictionary<CubeFace, Material>> colors = new Dictionary<Tuple<int, int, int>, Dictionary<CubeFace, Material>> {
+      if (z == size - 1) {
+        colors.Add(CubeFace.F, faceColors[CubeFace.F]);
+      }
+
+      return colors;
+    }
+
+    private Dictionary<CubeFace, Material> setFaceColorsFromProjection(int x, int y, int z, CubeFace[,] p) {
+      Dictionary<Tuple<int, int, int>, Dictionary<CubeFace, Material>> colors = new Dictionary<Tuple<int, int, int>, Dictionary<CubeFace, Material>> {
                 {new Tuple<int, int, int>(0, 0, 0), new Dictionary<CubeFace, Material>{
                     {CubeFace.L, faceColors[p[3,2]]},
                     {CubeFace.B, faceColors[p[2,3]]},
@@ -570,7 +586,7 @@ namespace Rubik2
                     {CubeFace.R, faceColors[p[3,7]]},
                     {CubeFace.B, faceColors[p[1,5]]},
                 }},
-                
+
                 {new Tuple<int, int, int>(0, 1, 1), new Dictionary<CubeFace, Material>{
                     {CubeFace.L, faceColors[p[4,1]]},
                 }},/*
@@ -580,7 +596,7 @@ namespace Rubik2
                 {new Tuple<int, int, int>(2, 1, 1), new Dictionary<CubeFace, Material>{
                     {CubeFace.R, faceColors[p[4,7]]},
                 }},
-                                
+
                 {new Tuple<int, int, int>(0, 1, 2), new Dictionary<CubeFace, Material>{
                     {CubeFace.L, faceColors[p[5,1]]},
                     {CubeFace.F, faceColors[p[7,3]]},
@@ -636,7 +652,7 @@ namespace Rubik2
                 }},
             };
 
-            return colors[new Tuple<int, int, int>(x, y, z)];
-        }
+      return colors[new Tuple<int, int, int>(x, y, z)];
     }
+  }
 }
