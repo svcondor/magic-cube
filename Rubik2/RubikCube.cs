@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Text;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Media3D;
@@ -8,7 +9,7 @@ using System.Windows.Threading;
 
 namespace Rubik2
 {
-  public class RubikCube : Cube
+  public class RubikCube : Piece
   {
     private Point3D origin = new Point3D(-cubeLen / 2, -cubeLen / 2, -cubeLen / 2);
 
@@ -33,55 +34,54 @@ namespace Rubik2
     //  createCube();
     //}
     //public RubikCube(int size1, Point3D o1, TimeSpan duration1, double len1 = 1, double space1 = 0.1) {
-      public RubikCube()
-      {
-        //RubikCube.size = size;
-        //this.origin = o;
-        //this.edge_len = len;
-        //this.space = space;
-        this.projection = new Cube2D();
+    public RubikCube() {
+      //RubikCube.size = size;
+      //this.origin = o;
+      //this.edge_len = len;
+      //this.space = space;
+      this.projection = new Cube2D();
       //this.animationDuration = duration;
 
       createCube();
     }
 
     /// <summary> When Saved Cube is Loaded </summary>
-    public RubikCube(CubeFace[,] projection) {
-      this.projection = new Cube2D(projection);
-      createCubeFromProjection();
-    }
+    //public RubikCube(CubeFace[,] projection) {
+    //  this.projection = new Cube2D(projection);
+    //  createCubeFromProjection();
+    //}
 
     /// <summary> When Saved Cube is Loaded </summary>
-    private void createCubeFromProjection() {
-      Cube c;
-      Dictionary<CubeFace, Material> colors;
+    //private void createCubeFromProjection() {
+    //  Piece c;
+    //  Dictionary<CubeFace, Material> colors;
 
-      double x_offset, y_offset, z_offset;
+    //  double x_offset, y_offset, z_offset;
 
-      for (int y = 0; y < sidePieces; y++) {
-        for (int z = 0; z < sidePieces; z++) {
-          for (int x = 0; x < sidePieces; x++) {
-            if (y == 1 && x == 1 && z == 1) {
-              continue;
-            }
+    //  for (int y = 0; y < sidePieces; y++) {
+    //    for (int z = 0; z < sidePieces; z++) {
+    //      for (int x = 0; x < sidePieces; x++) {
+    //        if (y == 1 && x == 1 && z == 1) {
+    //          continue;
+    //        }
 
-            x_offset = (pieceSize + spaceSize) * x;
-            y_offset = (pieceSize + spaceSize) * y;
-            z_offset = (pieceSize + spaceSize) * z;
+    //        x_offset = (pieceSize + spaceSize) * x;
+    //        y_offset = (pieceSize + spaceSize) * y;
+    //        z_offset = (pieceSize + spaceSize) * z;
 
-            Point3D p = new Point3D(origin.X + x_offset, origin.Y + y_offset, origin.Z + z_offset);
+    //        Point3D p = new Point3D(origin.X + x_offset, origin.Y + y_offset, origin.Z + z_offset);
 
-            colors = setFaceColorsFromProjection(x, y, z, projection.projection);
+    //        colors = setFaceColorsFromProjection(x, y, z, projection.projection);
 
-            c = new Cube(p, pieceSize, colors, getPossibleMoves(x, y, z));
-            this.Children.Add(c);
-          }
-        }
-      }
-    }
+    //        c = new Piece(p, colors, getPossibleMoves(x, y, z));
+    //        this.Children.Add(c);
+    //      }
+    //    }
+    //  }
+    //}
 
     protected override void createCube() {
-      Cube c;
+      Piece c;
       Dictionary<CubeFace, Material> colors;
 
       double x_offset, y_offset, z_offset;
@@ -100,8 +100,35 @@ namespace Rubik2
             Point3D p = new Point3D(origin.X + x_offset, origin.Y + y_offset, origin.Z + z_offset);
 
             colors = setFaceColors(x, y, z);
+            var msg = new StringBuilder();
+            msg.Append($"Piece {p}");
+            foreach (var color in colors) {
+              CubeFace v1 = color.Key;
+              Material v2 = color.Value;
+              var v3 = (DiffuseMaterial)v2;
+              var v4 = v3.Brush;
 
-            c = new Cube(p, pieceSize, colors, getPossibleMoves(x, y, z));
+              if (v4 != new SolidColorBrush(Colors.Black)) {
+                //msg.Append($" {v4}");
+                //var v6 = ((SolidColorBrush)v4).Color.ToString()
+                if (((SolidColorBrush)v4).Color == Color.FromRgb(255,0,0)) msg.Append(" Red");
+
+                else if (((SolidColorBrush)v4).Color == Color.FromRgb(0, 0, 255)) msg.Append(" Blue");
+                else if (((SolidColorBrush)v4).Color == Color.FromRgb(255, 255, 0)) msg.Append(" Yellow");
+                else if (((SolidColorBrush)v4).Color == Color.FromRgb(255, 255, 255)) msg.Append(" White");
+                else if (((SolidColorBrush)v4).Color == Color.FromRgb(0, 255, 0)) msg.Append(" Green");
+                else if (((SolidColorBrush)v4).Color == Color.FromRgb(0, 128, 0)) msg.Append(" DarkGreen");
+                else if (((SolidColorBrush)v4).Color == Color.FromRgb(255, 140, 0)) msg.Append(" DarkOrange");
+                else {
+
+                }
+              }
+            }
+            var possibleMoves = getPossibleMoves(x, y, z);
+            foreach (var move in possibleMoves)
+              msg.Append($" {move}");
+            c = new Piece(p, colors, possibleMoves);
+            Debug.WriteLine(msg.ToString());
             this.Children.Add(c);
           }
         }
@@ -120,7 +147,7 @@ namespace Rubik2
       else moves.Add(Move.M);
 
       if (z == 0) moves.Add(Move.B);
-      else if (z == sidePieces - 1)moves.Add(Move.F);
+      else if (z == sidePieces - 1) moves.Add(Move.F);
       else moves.Add(Move.S);
 
       return moves;
@@ -173,7 +200,7 @@ namespace Rubik2
 
       DoubleAnimation animation = new DoubleAnimation(0, angle, animationDuration);
 
-      foreach (Cube c in this.Children) {
+      foreach (Piece c in this.Children) {
         possibleMoves = new HashSet<Move>(c.possibleMoves);
         possibleMoves.Remove((Move)dominantFaces[moves[i].Key]);
 
@@ -230,7 +257,7 @@ namespace Rubik2
 
       DoubleAnimation animation = new DoubleAnimation(0, angle, animationDuration);
 
-      foreach (Cube c in this.Children) {
+      foreach (Piece c in this.Children) {
         possibleMoves = new HashSet<Move>(c.possibleMoves);
         possibleMoves.Remove((Move)dominantFaces[move.Key]);
         if (possibleMoves.Contains(move.Key)) {
@@ -272,7 +299,7 @@ namespace Rubik2
 
       DoubleAnimation animation = new DoubleAnimation(0, angle, animationDuration);
 
-      foreach (Cube c in this.Children) {
+      foreach (Piece c in this.Children) {
         //possibleMoves = new HashSet<Move>(c.possibleMoves);
         //possibleMoves.Remove((Move)dominantFaces[move.Key]);
         //if (possibleMoves.Contains(move.Key)) {
@@ -302,38 +329,27 @@ namespace Rubik2
       Debug.WriteLine($"getRotationAxis VTIX={viewTableIx} {m}=>{move}");
       switch (move) {
         case Move.F:
-        case Move.S:
-          axis.X = 0;
-          axis.Y = 0;
-          axis.Z = -1;
-          break;
-        case Move.R:
-          axis.X = -1;
-          axis.Y = 0;
-          axis.Z = 0;
-          break;
-        case Move.B:
-          axis.X = 0;
-          axis.Y = 0;
-          axis.Z = 1;
-          break;
-        case Move.L:
-        case Move.M:
-          axis.X = 1;
-          axis.Y = 0;
-          axis.Z = 0;
-          break;
-        case Move.U:
-          axis.X = 0;
-          axis.Y = -1;
-          axis.Z = 0;
-          break;
+        case Move.S: axis.X = 0; axis.Y = 0; axis.Z = -1; break;
+        case Move.B: axis.X = 0; axis.Y = 0; axis.Z = 1; break;
+
+        case Move.R: axis.X = -1; axis.Y = 0; axis.Z = 0; break;
+        case Move.L: 
+        case Move.M: axis.X = 1; axis.Y = 0; axis.Z = 0; break;
+
+        case Move.U: axis.X = 0; axis.Y = -1; axis.Z = 0; break;
         case Move.D:
-        case Move.E:
-          axis.X = 0;
-          axis.Y = 1;
-          axis.Z = 0;
-          break;
+        case Move.E: axis.X = 0; axis.Y = 1; axis.Z = 0; break;
+      }
+      if (viewTableIx == 1 || viewTableIx == 3) {
+        switch (move) {
+          case Move.F:
+          case Move.S: axis.X = 0; axis.Y = 0; axis.Z = 1; break;
+          case Move.B: axis.X = 0; axis.Y = 0; axis.Z = -1; break;
+
+          case Move.R: axis.X = 1; axis.Y = 0; axis.Z = 0; break;
+          case Move.L:
+          case Move.M: axis.X = -1; axis.Y = 0; axis.Z = 0; break;
+        }
       }
 
       return axis;

@@ -1,16 +1,16 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ClassDiagram MajorVersion="1" MinorVersion="1">
-  <Class Name="Rubik2.Cube">
+  <Class Name="Rubik2.Piece">
     <Position X="3.75" Y="0.75" Width="2.5" />
     <TypeIdentifier>
       <HashCode>iAAAAAQABACAgCAEAACAAAAAAAAAAAAAAAAAAAEAAAA=</HashCode>
-      <FileName>Cube.cs</FileName>
+      <FileName>Piece.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="Rubik2.Cube2D">
     <Position X="7.5" Y="1" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>ABAAAAAAAAAQkAABAIDQA8AAABAABAAAgAAHAAAAAEE=</HashCode>
+      <HashCode>ABAAAAAAAAAQkAABAADQA8AAABAABAAAgAAHAAEAAEE=</HashCode>
       <FileName>Cube2D.cs</FileName>
     </TypeIdentifier>
   </Class>
@@ -25,7 +25,7 @@
     <Position X="11.25" Y="1" Width="1.25" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAUCAQA=</HashCode>
-      <FileName>Cube.cs</FileName>
+      <FileName>Piece.cs</FileName>
     </TypeIdentifier>
   </Enum>
   <Font Name="Segoe UI" Size="9" />

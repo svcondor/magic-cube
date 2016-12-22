@@ -64,10 +64,9 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Cube.cs" />
+    <Compile Include="Piece.cs" />
     <Compile Include="Cube2D.cs" />
     <Compile Include="Helpers.cs" />
-    <Compile Include="InputOutput.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>

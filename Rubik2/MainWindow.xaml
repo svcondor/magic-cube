@@ -5,23 +5,22 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Rubik2"
         mc:Ignorable="d"
-        Title="MainWindow" Height="500" Width="750" Loaded="Window_Loaded" MouseMove="Window_MouseMove" MouseRightButtonDown="Window_MouseRightButtonDown" MouseRightButtonUp="Window_MouseRightButtonUp" MouseLeftButtonDown="Window_MouseLeftButtonDown" MouseLeftButtonUp="Window_MouseLeftButtonUp" WindowStartupLocation="CenterScreen" ContentRendered="Window_ContentRendered" KeyUp="Window_KeyUp">
+        Title="MainWindow" Height="500" Width="750" 
+        ContentRendered="Window_ContentRendered" >
     <Grid>
     <Grid.ColumnDefinitions>
-      <ColumnDefinition Width="2*"/>
-      <ColumnDefinition Width="8*"/>
+      <ColumnDefinition Width="3*"/>
+      <ColumnDefinition Width="7*"/>
     </Grid.ColumnDefinitions>
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
       <RowDefinition Height="6*" />
       <RowDefinition Height="1*" />
     </Grid.RowDefinitions>
+      
     <Menu IsMainMenu="True" Grid.ColumnSpan="2">
       <MenuItem Header="_File">
         <MenuItem Header="Animations" IsCheckable="True" IsChecked="True" Name="menuEnableAnimations" Checked="menuEnableAnimations_Checked" Unchecked="menuEnableAnimations_Unchecked" />
-        <Separator />
-        <MenuItem Header="Save" Name="menuSave" Click="menuSave_Click" />
-        <MenuItem Header="Load" Name="loadMenu" Click="menuLoad_Click" />
       </MenuItem>
       <MenuItem Header="Reset"  Click="menuReset_Click"/>
       <MenuItem Header="_New Game" Click="menuScramble_Click">
@@ -29,21 +28,25 @@
       <MenuItem Header="Solve" Name="menuSolve" Click="menuSolve_Click" IsEnabled="False" />
       <!--<MenuItem Header="Move 1" Name="menuMove1" Click="menuMove1_Click"/>-->
     </Menu>
+      
     <StackPanel Grid.Row="1">
       <Button Name="btnRotate" Click="btnRotate_Click">Rotate</Button>
       <Button Name="btnFlip" Click="btnFlip_Click">Flip</Button>
       <ListBox Name="lstMoves" SelectionChanged="lstMoves_SelectionChanged">
-        <ListBoxItem>U' L' U L U F U' F'</ListBoxItem>
-        <ListBoxItem>U R U' R' U' F' U F</ListBoxItem>
-        <ListBoxItem>F U R U' R' F'</ListBoxItem>
-        <ListBoxItem>F R U R' U' F'</ListBoxItem>
-        <ListBoxItem>R U R' U R U U R' U</ListBoxItem>
-        <ListBoxItem>U R U' L' U R' U' L</ListBoxItem>
-        <ListBoxItem>R' D' R D R' D' R D</ListBoxItem>
+        <ListBoxItem>R' U F' U' /To swap colors of right side top side piece</ListBoxItem>
+        <ListBoxItem>R' D' R D /White corner to top</ListBoxItem>
+        <ListBoxItem>U' L' U L U F U' F' /Middle to left</ListBoxItem>
+        <ListBoxItem>U R U' R' U' F' U F /Middle to right</ListBoxItem>
+        <ListBoxItem>F U R U' R' F' /From yellow L in far left</ListBoxItem>
+        <ListBoxItem>F R U R' U' F' /From 3 yellow in middle</ListBoxItem>
+        <ListBoxItem>R U R' U R U U R' U /Swap front-left side color</ListBoxItem>
+        <ListBoxItem>U R U' L' U R' U' L /Correct yelow corner on top right</ListBoxItem>
+        <ListBoxItem>R' D' R D R' D' R D /Orient top right</ListBoxItem>
       </ListBox>
       <TextBox Name="txtMoves" ></TextBox>
       <Button Name="btnRun" Click="btnRun_Click">Run</Button>
       <Button Name="btnUndo" Click="btnUndo_Click">Undo</Button>
+
       <Grid >
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="1*"/>
@@ -67,20 +70,8 @@
         </StackPanel>
       </Grid>
     </StackPanel>
+      
     <Viewport3D Name="mainViewport" Grid.Column="1" Grid.Row="1"  ClipToBounds="True">
-      <ModelVisual3D>
-        <ModelVisual3D.Content>
-          <Model3DGroup>
-            <AmbientLight Color="#FF4E4E4E" />
-            <PointLight Position="0,0,-7" />
-            <SpotLight Color="White" Position="7,-7,7" ConstantAttenuation="0.5" Direction="0,1,0" OuterConeAngle="140" />
-            <!--<SpotLight Position="7,7,7" Direction="0,0,0" OuterConeAngle="190" ConstantAttenuation="0.2" />-->
-            <SpotLight Position="7,9,7" Direction="0,0,0" OuterConeAngle="190" ConstantAttenuation="0.2" />
-          </Model3DGroup>
-        </ModelVisual3D.Content>
-      </ModelVisual3D>
-    </Viewport3D>
-    <Viewport3D Name="backViewport" Grid.Column="0" Grid.Row="2"  ClipToBounds="True">
       <ModelVisual3D>
         <ModelVisual3D.Content>
           <Model3DGroup>
