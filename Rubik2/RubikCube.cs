@@ -25,7 +25,13 @@ namespace Rubik2
     bool animation_lock = false;
 
     private Dictionary<CubeFace, Material> faceColors = new Dictionary<CubeFace, Material> {
-            {CubeFace.L, new DiffuseMaterial(new SolidColorBrush(Colors.Red))},
+            //{CubeFace.L, new SpecularMaterial(new SolidColorBrush(Colors.Red),0.5) },
+            //{CubeFace.D, new SpecularMaterial(new SolidColorBrush(Colors.Yellow),0.5)},
+            //{CubeFace.B, new SpecularMaterial(new SolidColorBrush(Colors.Green),0.5)},
+            //{CubeFace.R, new SpecularMaterial(new SolidColorBrush(Colors.DarkOrange),0.5)},
+            //{CubeFace.U, new SpecularMaterial(new SolidColorBrush(Colors.White),0.5)},
+            //{CubeFace.F, new SpecularMaterial(new SolidColorBrush(Colors.Blue),0.5)}
+            {CubeFace.L, new DiffuseMaterial(new SolidColorBrush(Colors.Red)) },
             {CubeFace.D, new DiffuseMaterial(new SolidColorBrush(Colors.Yellow))},
             {CubeFace.B, new DiffuseMaterial(new SolidColorBrush(Colors.Green))},
             {CubeFace.R, new DiffuseMaterial(new SolidColorBrush(Colors.DarkOrange))},
@@ -83,7 +89,7 @@ namespace Rubik2
     public RubikCube() {
       this.projection = new Cube2D();
 
-      const double spaceSize = 0.1; // was 0.05
+      const double spaceSize = 0.00; // was 0.1 0.05
       const double cubeSize = Piece.pieceSize * sidePieces + spaceSize * (sidePieces - 1);
       Point3D cubeOrigin = new Point3D(-cubeSize / 2, -cubeSize / 2, -cubeSize / 2);
 
