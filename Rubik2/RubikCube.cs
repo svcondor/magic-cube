@@ -184,14 +184,14 @@ namespace Rubik2
       DoubleAnimation animation = new DoubleAnimation(0, angle, animationDuration);
 
       foreach (Piece piece in this.Children) {
-        possibleMoves = new HashSet<Move>(piece.possibleMoves);
-        possibleMoves.Remove((Move)dominantFaces[moves[i].Key]);
+          possibleMoves = new HashSet<Move>(piece.possibleMoves);
+          possibleMoves.Remove((Move)dominantFaces[moves[i].Key]);
 
-        if (possibleMoves.Contains(moves[i].Key)) {
-          piece.possibleMoves = getNextPossibleMoves(piece.possibleMoves, moves[i].Key, moves[i].Value);
-          piece.rotations.Children.Add(transform);
-          rotation.BeginAnimation(AxisAngleRotation3D.AngleProperty, animation);
-        }
+          if (possibleMoves.Contains(moves[i].Key)) {
+            piece.possibleMoves = getNextPossibleMoves(piece.possibleMoves, moves[i].Key, moves[i].Value);
+            piece.rotations.Children.Add(transform);
+            rotation.BeginAnimation(AxisAngleRotation3D.AngleProperty, animation);
+          }
       }
       animation.Completed += (sender, eventArgs) => {
         if (moves.Count == 25 && i >= 24) {

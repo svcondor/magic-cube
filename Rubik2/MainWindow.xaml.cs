@@ -68,7 +68,7 @@ namespace Rubik2
 
     private HitTestResultBehavior resultCb(HitTestResult r) {
       MyModelVisual3D model = r.VisualHit as MyModelVisual3D;
-
+      
 
       if (model != null) {
         touchedFaces.Add(model.Tag);
@@ -77,9 +77,8 @@ namespace Rubik2
 
       return HitTestResultBehavior.Continue;
     }
-
-    private void Window_ContentRendered(object sender, EventArgs e) {
-      double cameraDistance = 8;
+    private void Window_Loaded(object sender, RoutedEventArgs e) {
+      double cameraDistance = 8;  //was 8
       var cameraPos = new Point3D {
         X = cameraDistance - 4,    // Was -0
         Y = cameraDistance - 3,    // Was -0
@@ -95,6 +94,9 @@ namespace Rubik2
       this.mainViewport.Camera = camera;
 
       init();
+    }
+
+    private void Window_ContentRendered(object sender, EventArgs e) {
     }
 
     private void init() {
@@ -159,6 +161,7 @@ namespace Rubik2
     /// <summary> Flip button pressed</summary>
     private void btnFlip_Click(object sender, RoutedEventArgs e) {
       KeyValuePair<Move, RotationDirection> m = new KeyValuePair<Move, RotationDirection>(Move.R, RotationDirection.ClockWise);
+      //rubikCube.animationDuration = TimeSpan.FromSeconds(2);
       rubikCube.rotateAll(m);
       rubikCube.rotateAll(m);
       switch (viewTableIx) {
@@ -263,6 +266,41 @@ namespace Rubik2
       scramble1(25);
     }
 
+    private void mainViewport_MouseLeftButtonDown(object sender, MouseButtonEventArgs e) {
+      Point pt = e.GetPosition((UIElement)sender);
+      Point mouse_pos = e.GetPosition(mainViewport);
+      Debug.WriteLine($"Viewport {pt} {mouse_pos}");
+      HitTestResult result =
+        VisualTreeHelper.HitTest(mainViewport, mouse_pos);
+      RayMeshGeometry3DHitTestResult mesh_result =
+        result as RayMeshGeometry3DHitTestResult;
+      var v1 = mesh_result.ModelHit; // as ModelVisual3D;
+      if (v1 is GeometryModel3D) {
+        GeometryModel3D g1 = (GeometryModel3D)v1;
+        if (Piece.Models.ContainsKey(g1)) {
+          int v2 = Piece.Models[g1] / 10;
+          Debug.WriteLine($"HitTest {v2}");
+          DiffuseMaterial material = g1.Material as DiffuseMaterial;
+          SolidColorBrush brush = material.Brush as SolidColorBrush;
+          Color color = brush.Color;
+          if (color == Colors.Red) color = Colors.Yellow;
+          else if (color == Colors.Yellow) color = Colors.Green;
+          else if (color == Colors.Green) color = Colors.DarkOrange;
+          else if (color == Colors.DarkOrange) color = Colors.White;
+          else if (color == Colors.White) color = Colors.Blue;
+          else if (color == Colors.Blue) color = Colors.DarkGray;
+          else if (color == Colors.DarkGray) color = Colors.Red;
+          foreach(var model in Piece.Models) {
+            if (model.Value / 10 == v2) {
+              model.Key.Material = new DiffuseMaterial(new SolidColorBrush(color));
+            }
+          }
+        }
+      }
+      else {
+
+      }
+    }
 
   }
 }

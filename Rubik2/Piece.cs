@@ -19,7 +19,7 @@ namespace Rubik2
     D, // down
     None
   }
-  public enum Plane { X,Y,Z}
+  //public enum Plane { X,Y,Z}
 
   /// <summary>
   /// Create a single Piece
@@ -47,7 +47,7 @@ namespace Rubik2
     /// <summary> Far-lower-left corner of Piece </summary>
     private Point3D origin;
 
-    private Material defaultMaterial = new DiffuseMaterial(new SolidColorBrush(Colors.Black));
+    public static Material defaultMaterial = new DiffuseMaterial(new SolidColorBrush(Colors.Black));
     private Dictionary<CubeFace, Material> faces;
     public HashSet<Move> possibleMoves = new HashSet<Move>();
     public Transform3DGroup rotations = new Transform3DGroup();
@@ -64,7 +64,7 @@ namespace Rubik2
       this.possibleMoves = possibleMoves;
 
       if (defaultMaterial != null) {
-        this.defaultMaterial = defaultMaterial;
+        //defaultMaterial = defaultMaterial;
       }
       this.Transform = this.rotations;
       createPiece();
@@ -82,19 +82,18 @@ namespace Rubik2
     void createPiece() {
       foreach (var face in Enum.GetValues(typeof(CubeFace)).Cast<CubeFace>()) {
         Material material;
-        if (faces == null || !faces.TryGetValue(face, out material)) {
-          material = defaultMaterial;
+        if (faces.TryGetValue(face, out material)) {
+          createFace(face, material);
         }
-        createFace(face, material);
       }
     }
 
     /// <summary>
     /// Create a face of the cube
     /// </summary>
-    /// <param name="f">The face that needs to be created</param>
-    /// <param name="m">Materal to be applied to the face</param>
-    private void createFace(CubeFace f, Material m) {
+    /// <param name="face">The face that needs to be created</param>
+    /// <param name="material">Materal to be applied to the face</param>
+    private void createFace(CubeFace face, Material material) {
       Point3D p0 = new Point3D();
       Point3D p1 = new Point3D();
       Point3D p2 = new Point3D();
@@ -102,14 +101,9 @@ namespace Rubik2
       Point3D o1 = origin;
       Point3D o2 = new Point3D(o1.X + pieceSize, o1.Y + pieceSize, o1.Z + pieceSize);
 
-      Plane plane = new Plane();
-      ModelVisual3D r1 = new ModelVisual3D();
-      ModelVisual3D r2 = new ModelVisual3D();
-      ModelVisual3D r1a = new ModelVisual3D();
-      ModelVisual3D r2a = new ModelVisual3D();
-      double b = 0.07;
-      double p = 0.01;
-      switch (f) {
+      double b = 0.07;  // black border around piece face
+      double p = 0.01;  // dimension to keep colour proud of black border
+      switch (face) {
 
         case CubeFace.F:
           //  /--------/
@@ -117,22 +111,16 @@ namespace Rubik2
           // |       | |
           // |       | /
           // 1-------2/
-
           p0 = new Point3D(o1.X, o2.Y, o2.Z);
           p1 = new Point3D(o1.X, o1.Y, o2.Z);
           p2 = new Point3D(o2.X, o1.Y, o2.Z);
           p3 = new Point3D(o2.X, o2.Y, o2.Z);
           drawFace(p0, p1, p2, p3, defaultMaterial);
-          if (m != defaultMaterial) {
-            p0 = new Point3D(o1.X + b, o2.Y - b, o2.Z + p);
-            p1 = new Point3D(o1.X + b, o1.Y + b, o2.Z + p);
-            p2 = new Point3D(o2.X - b, o1.Y + b, o2.Z + p);
-            p3 = new Point3D(o2.X - b, o2.Y - b, o2.Z + p);
-            drawFace(p0, p1, p2, p3, m);
-          }
-          return;
-
-
+          p0 = new Point3D(o1.X + b, o2.Y - b, o2.Z + p);
+          p1 = new Point3D(o1.X + b, o1.Y + b, o2.Z + p);
+          p2 = new Point3D(o2.X - b, o1.Y + b, o2.Z + p);
+          p3 = new Point3D(o2.X - b, o2.Y - b, o2.Z + p);
+          drawFace(p0, p1, p2, p3, material);
           break;
 
         case CubeFace.R:
@@ -146,14 +134,12 @@ namespace Rubik2
           p2 = new Point3D(o2.X, o1.Y, o1.Z);
           p3 = new Point3D(o2.X, o2.Y, o1.Z);
           drawFace(p0, p1, p2, p3, defaultMaterial);
-          if (m != defaultMaterial) {
-            p0 = new Point3D(o2.X + p, o2.Y - b, o2.Z - b);
-            p1 = new Point3D(o2.X + p, o1.Y + b, o2.Z - b);
-            p2 = new Point3D(o2.X + p, o1.Y + b, o1.Z + b);
-            p3 = new Point3D(o2.X + p, o2.Y - b, o1.Z + b);
-            drawFace(p0, p1, p2, p3, m);
-          }
-          return;
+          p0 = new Point3D(o2.X + p, o2.Y - b, o2.Z - b);
+          p1 = new Point3D(o2.X + p, o1.Y + b, o2.Z - b);
+          p2 = new Point3D(o2.X + p, o1.Y + b, o1.Z + b);
+          p3 = new Point3D(o2.X + p, o2.Y - b, o1.Z + b);
+          drawFace(p0, p1, p2, p3, material);
+          break;
 
         case CubeFace.B:
           //  3--------0
@@ -161,20 +147,17 @@ namespace Rubik2
           // | |     | |
           // | 2 ----|-1
           // |-------|/
-
           p0 = new Point3D(o2.X, o2.Y, o1.Z);
           p1 = new Point3D(o2.X, o1.Y, o1.Z);
           p2 = new Point3D(o1.X, o1.Y, o1.Z);
           p3 = new Point3D(o1.X, o2.Y, o1.Z);
           drawFace(p0, p1, p2, p3, defaultMaterial);
-          if (m != defaultMaterial) {
-            p0 = new Point3D(o2.X - b, o2.Y - b, o1.Z - p);
-            p1 = new Point3D(o2.X - b, o1.Y + b, o1.Z - p);
-            p2 = new Point3D(o1.X + b, o1.Y + b, o1.Z - p);
-            p3 = new Point3D(o1.X + b, o2.Y - b, o1.Z - p);
-            drawFace(p0, p1, p2, p3, m);
-          }
-          return;
+          p0 = new Point3D(o2.X - b, o2.Y - b, o1.Z - p);
+          p1 = new Point3D(o2.X - b, o1.Y + b, o1.Z - p);
+          p2 = new Point3D(o1.X + b, o1.Y + b, o1.Z - p);
+          p3 = new Point3D(o1.X + b, o2.Y - b, o1.Z - p);
+          drawFace(p0, p1, p2, p3, material);
+          break;
 
         case CubeFace.L:
           //  0--------/
@@ -182,20 +165,17 @@ namespace Rubik2
           // | |     | |
           // | 1 ----|-/
           // 2-------|/
-
           p0 = new Point3D(o1.X, o2.Y, o1.Z);
           p1 = new Point3D(o1.X, o1.Y, o1.Z);
           p2 = new Point3D(o1.X, o1.Y, o2.Z);
           p3 = new Point3D(o1.X, o2.Y, o2.Z);
           drawFace(p0, p1, p2, p3, defaultMaterial);
-          if (m != defaultMaterial) {
-            p0 = new Point3D(o1.X - p, o2.Y - b, o1.Z +b);
-            p1 = new Point3D(o1.X - p, o1.Y + b, o1.Z +b);
-            p2 = new Point3D(o1.X - p, o1.Y + b, o2.Z -b);
-            p3 = new Point3D(o1.X - p, o2.Y - b, o2.Z -b);
-            drawFace(p0, p1, p2, p3, m);
-          }
-          return;
+          p0 = new Point3D(o1.X - p, o2.Y - b, o1.Z + b);
+          p1 = new Point3D(o1.X - p, o1.Y + b, o1.Z + b);
+          p2 = new Point3D(o1.X - p, o1.Y + b, o2.Z - b);
+          p3 = new Point3D(o1.X - p, o2.Y - b, o2.Z - b);
+          drawFace(p0, p1, p2, p3, material);
+          break;
 
         case CubeFace.U:
           //  0--------3
@@ -203,20 +183,17 @@ namespace Rubik2
           // |       | |
           // |       | |
           // |-------|/
-
           p0 = new Point3D(o1.X, o2.Y, o1.Z);
           p1 = new Point3D(o1.X, o2.Y, o2.Z);
           p2 = new Point3D(o2.X, o2.Y, o2.Z);
           p3 = new Point3D(o2.X, o2.Y, o1.Z);
           drawFace(p0, p1, p2, p3, defaultMaterial);
-          if (m != defaultMaterial) {
-            p0 = new Point3D(o1.X + b, o2.Y + p, o1.Z + b);
-            p1 = new Point3D(o1.X + b, o2.Y + p, o2.Z - b);
-            p2 = new Point3D(o2.X - b, o2.Y + p, o2.Z - b);
-            p3 = new Point3D(o2.X - b, o2.Y + p, o1.Z + b);
-            drawFace(p0, p1, p2, p3, m);
-          }
-          return;
+          p0 = new Point3D(o1.X + b, o2.Y + p, o1.Z + b);
+          p1 = new Point3D(o1.X + b, o2.Y + p, o2.Z - b);
+          p2 = new Point3D(o2.X - b, o2.Y + p, o2.Z - b);
+          p3 = new Point3D(o2.X - b, o2.Y + p, o1.Z + b);
+          drawFace(p0, p1, p2, p3, material);
+          break;
 
         case CubeFace.D:
           //  /--------/
@@ -224,90 +201,53 @@ namespace Rubik2
           // | |     | |
           // | 0 ----|-1
           // 3-------|2
-
           p0 = new Point3D(o1.X, o1.Y, o1.Z);
           p1 = new Point3D(o2.X, o1.Y, o1.Z);
           p2 = new Point3D(o2.X, o1.Y, o2.Z);
           p3 = new Point3D(o1.X, o1.Y, o2.Z);
           drawFace(p0, p1, p2, p3, defaultMaterial);
-          if (m != defaultMaterial) {
-            p0 = new Point3D(o1.X + b, o1.Y - p, o1.Z + b);
-            p1 = new Point3D(o2.X - b, o1.Y - p, o1.Z + b);
-            p2 = new Point3D(o2.X - b, o1.Y - p, o2.Z - b);
-            p3 = new Point3D(o1.X + b, o1.Y - p, o2.Z - b);
-            drawFace(p0, p1, p2, p3, m);
-          }
-          return;
+          p0 = new Point3D(o1.X + b, o1.Y - p, o1.Z + b);
+          p1 = new Point3D(o2.X - b, o1.Y - p, o1.Z + b);
+          p2 = new Point3D(o2.X - b, o1.Y - p, o2.Z - b);
+          p3 = new Point3D(o1.X + b, o1.Y - p, o2.Z - b);
+          drawFace(p0, p1, p2, p3, material);
+          break;
       }
-
-      //ModelVisual3D r1 = new ModelVisual3D();
-      //ModelVisual3D r2 = new ModelVisual3D();
-      //if (m == defaultMaterial) {
-      //  r1.Content = Helpers.createTriangleModel(p0, p1, p2, defaultMaterial);
-      //  r2.Content = Helpers.createTriangleModel(p0, p2, p3, defaultMaterial);
-
-      //  this.Children.Add(r1);
-      //  this.Children.Add(r2);
-      //}
-      //if (m != defaultMaterial) {
-      //double border = 0.2;
-      //if (plane != Plane.X) {
-      //  if (p0.X > 0) p0.X -= border; else p0.X += border;
-      //  if (p1.X > 0) p1.X -= border; else p1.X += border;
-      //  if (p2.X > 0) p2.X -= border; else p2.X += border;
-      //  if (p3.X > 0) p3.X -= border; else p3.X += border;
-      //}
-      //if (plane != Plane.Y) {
-      //  if (p0.Y > 0) p0.Y -= border; else p0.Y += border;
-      //  if (p1.Y > 0) p1.Y -= border; else p1.Y += border;
-      //  if (p2.Y > 0) p2.Y -= border; else p2.Y += border;
-      //  if (p3.Y > 0) p3.Y -= border; else p3.Y += border;
-      //}
-      //if (plane != Plane.Z) {
-      //  if (p0.Z > 0) p0.Z -= border; else p0.Z += border;
-      //  if (p1.Z > 0) p1.Z -= border; else p1.Z += border;
-      //  if (p2.Z > 0) p2.Z -= border; else p2.Z += border;
-      //  if (p3.Z > 0) p3.Z -= border; else p3.Z += border;
-      //}
-      r1a.Content = Helpers.createTriangleModel(p0, p1, p2, m);
-        r2a.Content = Helpers.createTriangleModel(p0, p2, p3, m);
-
-        this.Children.Add(r1a);
-        this.Children.Add(r2a);
-
-      }
-
-    void drawFace(Point3D p0, Point3D p1, Point3D p2, Point3D p3, Material m) {
-      ModelVisual3D r1 = new ModelVisual3D();
-      ModelVisual3D r2 = new ModelVisual3D();
-      r1.Content = Helpers.createTriangleModel(p0, p1, p2, m);
-      r2.Content = Helpers.createTriangleModel(p0, p2, p3, m);
-      this.Children.Add(r1);
-      this.Children.Add(r2);
     }
 
-    //var msg = new StringBuilder();
-    //msg.Append($"DrawSide {p0} {p1} {p2} {p3} ");
-    //DiffuseMaterial v3 = (DiffuseMaterial)m;
-    //SolidColorBrush v5 = v3.Brush as SolidColorBrush;
-    //Color v4 = v5.Color;
-    //if (v4 != Colors.Black) {
-    //  if (v4 == Color.FromRgb(255, 0, 0)) msg.Append(" Red");
-    //  else if (v4 == Color.FromRgb(0, 0, 255)) msg.Append(" Blue");
-    //  else if (v4 == Color.FromRgb(255, 255, 0)) msg.Append(" Yellow");
-    //  else if (v4 == Color.FromRgb(255, 255, 255)) msg.Append(" White");
-    //  else if (v4 == Color.FromRgb(0, 128, 0)) msg.Append(" Green");
-    //  else if (v4 == Color.FromRgb(255, 140, 0)) msg.Append(" Orange");
-    //  else {
+    void drawFace(Point3D p0, Point3D p1, Point3D p2, Point3D p3, Material m) {
 
-    //  }
-    //  Debug.WriteLine(msg.ToString());
-    //}
+      //  Debug.WriteLine($"Blackface {p0} {p1} {p2} {p3} ");
+      if (m == defaultMaterial) {
+        ModelVisual3D r1 = new ModelVisual3D();
+        ModelVisual3D r2 = new ModelVisual3D();
+        ModelVisual3D r3 = new ModelVisual3D();
+        ModelVisual3D r4 = new ModelVisual3D();
+        r1.Content = Helpers.createTriangleModel(p0, p1, p2, m);
+        r2.Content = Helpers.createTriangleModel(p0, p2, p3, m);
+        r3.Content = Helpers.createTriangleModel(p2, p1, p0, m);
+        r4.Content = Helpers.createTriangleModel(p3, p2, p0, m);
+        this.Children.Add(r1);
+        this.Children.Add(r2);
+        this.Children.Add(r3);
+        this.Children.Add(r4);
+      }
+      else {
+        ModelVisual3D r1 = new ModelVisual3D();
+        ModelVisual3D r2 = new ModelVisual3D();
 
-    //r1.Content = Helpers.createTriangleModel(p0, p1, p2, m);
-    //r2.Content = Helpers.createTriangleModel(p0, p2, p3, m);
-
-    //this.Children.Add(r1);
-    //this.Children.Add(r2);
+        var t1 = Helpers.createTriangleModel(p0, p1, p2, m);
+        var t2 = Helpers.createTriangleModel(p0, p2, p3, m);
+        r1.Content = t1;
+        r2.Content = t2;
+        this.Children.Add(r1);
+        this.Children.Add(r2);
+        Models.Add(t1, modelIx + 1);
+        Models.Add(t2, modelIx + 2);
+        modelIx += 10;
+      }
+    }
+    public static int modelIx;
+    public static Dictionary<GeometryModel3D, int> Models = new Dictionary<GeometryModel3D, int>();
   }
 }
