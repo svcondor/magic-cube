@@ -11,6 +11,108 @@ namespace Rubik2
 {
   public class RubikCube : ModelVisual3D
   {
+    int viewTableIx = 0;
+    static string[] viewTable = new string[] {
+      "UFLBRD",
+      "ULBRFD",
+      "UBRFLD",
+      "URFLBD",
+      "DBLFRU",
+      "DLFRBU",
+      "DFRBLU",
+      "DRBLFU"
+    };
+
+    static int[,] clockMoves = new int[8, 54];
+
+    static int[,] antiMoves = new int[8, 54];
+
+    static void initAntiMoves() {
+      clockMoves = new int[8, 54] {
+      { 27,27,27,0,0,0,0,0,0, -9,-9,-9,0,0,0,0,0,0, -9,-9,-9,0,0,0,0,0,0, -9,-9,-9,0,0,0,0,0,0, 2,4,6,-2,0,2,-6,-4,-2, 0,0,0,0,0,0,0,0,0 },
+{ 45,0,0,45,0,0,45,0,0,0,0,0,0,0,0,0,0,0,0,0,22,0,0,16,0,0,10,2,4,6,-2,0,2,-6,-4,-2,-36,0,0,-36,0,0,-36,0,0,-19,0,0,-25,0,0,-31,0,0 },
+{ 2,4,6,-2,0,2,-6,-4,-2,38,0,0,34,0,0,30,0,0,0,0,0,0,0,0,0,0,0,0,0,15,0,0,11,0,0,7,0,0,0,0,0,0,-33,-31,-29,-16,-14,-12,0,0,0,0,0,0  },
+{ 0,0,36,0,0,36,0,0,36,2,4,6,-2,0,2,-6,-4,-2,35,0,0,29,0,0,23,0,0,0,0,0,0,0,0,0,0,0,0,0,-14,0,0,-20,0,0,-26,0,0,-45,0,0,-45,0,0,-45 },
+{ 0,0,0,0,0,0,0,0,0,0,0,25,0,0,23,0,0,21,2,4,6,-2,0,2,-6,-4,-2,24,0,0,22,0,0,20,0,0,-3,-7,-11,0,0,0,0,0,0,0,0,0,0,0,0,-34,-38,-42 },
+
+{ 0,0,0,0,0,0,9,9,9,0,0,0,0,0,0,9,9,9,0,0,0,0,0,0,9,9,9,0,0,0,0,0,0,-27,-27,-27,0,0,0,0,0,0,0,0,0,2,4,6,-2,0,2,-6,-4,-2 },
+{ 27,27,27,27,27,27,27,27,27,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,-9,2,4,6,-2,0,2,-6,-4,-2,6,2,-2,4,0,-4,2,-2,-6 },
+{ 36,36,36,36,36,36,36,36,36,2,4,6,-2,0,2,-6,-4,-2,35,33,31,29,27,25,23,21,19,6,2,-2,4,0,-4,2,-2,-6,-10,-12,-14,-16,-18,-20,-22,-24,-26,-45,-45,-45,-45,-45,-45,-45,-45,-45
+ } };
+      antiMoves = new int[8, 54] {
+      { 9, 9, 9, 0, 0, 0, 0, 0, 0, 9, 9, 9, 0, 0, 0, 0, 0, 0, 9, 9, 9, 0, 0, 0, 0, 0, 0, -27, -27, -27, 0, 0, 0, 0, 0, 0, 6, 2, -2, 4, 0, -4, 2, -2, -6, 0, 0, 0, 0, 0, 0, 0, 0, 0, },
+{ 36, 0, 0, 36, 0, 0, 36, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 31, 0, 0, 25, 0, 0, 19, 6, 2, -2, 4, 0, -4, 2, -2, -6, -10, 0, 0, -16, 0, 0, -22, 0, 0, -45, 0, 0, -45, 0, 0, -45, 0, 0, },
+{ 6, 2, -2, 4, 0, -4, 2, -2, -6, 33, 0, 0, 31, 0, 0, 29, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16, 0, 0, 14, 0, 0, 12, 0, 0, 0, 0, 0, 0, -7, -11, -15, -30, -34, -38, 0, 0, 0, 0, 0, 0, },
+{ 0, 0, 45, 0, 0, 45, 0, 0, 45, 6, 2, -2, 4, 0, -4, 2, -2, -6, 26, 0, 0, 20, 0, 0, 14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -36, 0, 0, -36, 0, 0, -36, 0, 0, -23, 0, 0, -29, 0, 0, -35, },
+{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 42, 0, 0, 38, 0, 0, 34, 6, 2, -2, 4, 0, -4, 2, -2, -6, 11, 0, 0, 7, 0, 0, 3, 0, 0, -25, -23, -21, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -24, -22, -20, },
+{ 0, 0, 0, 0, 0, 0, 27, 27, 27, 0, 0, 0, 0, 0, 0, -9, -9, -9, 0, 0, 0, 0, 0, 0, -9, -9, -9, 0, 0, 0, 0, 0, 0, -9, -9, -9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 2, -2, 4, 0, -4, 2, -2, -6, },
+{ 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, -27, -27, -27, -27, -27, -27, -27, -27, -27, 6, 2, -2, 4, 0, -4, 2, -2, -6, 2, 4, 6, -2, 0, 2, -6, -4, -2, },
+{ 45, 45, 45, 45, 45, 45, 45, 45, 45, 6, 2, -2, 4, 0, -4, 2, -2, -6, 26, 24, 22, 20, 18, 16, 14, 12, 10, 2, 4, 6, -2, 0, 2, -6, -4, -2, -36, -36, -36, -36, -36, -36, -36, -36, -36, -19, -21, -23, -25, -27, -29, -31, -33, -35, }, };
+
+
+      if (false) {
+        for (int i = 0; i < 8; ++i) {
+          for (int j = 0; j < 54; ++j) {
+            if (clockMoves[i, j] != 0) {
+              int j1 = j + clockMoves[i, j]; // clock 90
+              int j2 = j1 + clockMoves[i, j1];  // 180
+              int j3 = j2 + clockMoves[i, j2];  // 270
+              int j4 = j3 + clockMoves[i, j3];  // 360
+              int a = clockMoves[i, j];
+              int a1 = clockMoves[i, j1];
+              int a2 = clockMoves[i, j2];
+              int a3 = clockMoves[i, j3];
+
+
+
+              Debug.Assert(j4 == j, "error in table clockMoves");
+              antiMoves[i, j] = j3 - j;
+            }
+          }
+        }
+        for (int i = 0; i < 8; ++i) {
+          string s1 = "{";
+          for (int j = 0; j < 54; ++j) {
+            s1 += $"{antiMoves[i, j]}, ";
+          }
+          Debug.Print($"{s1}}},");
+
+        }
+      }
+    }
+
+    private void drawFace1(int TileIx,Color color) {
+
+      for (int y = 3; y > -3; y -= 2) {
+        for (int x = -3; x < 3; x += 2) {
+          Tile tile1 = new Tile(x, y, TileIx, color);
+          this.Children.Add(tile1);
+          ++TileIx;
+        }
+      }
+    }
+
+    void rotate1(string move2) {
+      GeometryModel3D myGeometryModel = new GeometryModel3D();
+      
+      Move move = (Move)Enum.Parse(typeof(Move), move2.Substring(0,1).ToUpper());
+      Vector3D axis = getRotationAxis(move);
+      double angle = 90;
+      if (move2.Length > 1 && move2[1] == '\'') angle = -90;
+      AxisAngleRotation3D rotation = new AxisAngleRotation3D(axis, angle);
+      RotateTransform3D transform = new RotateTransform3D(rotation, new Point3D(0, 0, 0));
+      DoubleAnimation animation = new DoubleAnimation(0, angle, TimeSpan.FromMilliseconds(1));
+      //var myTransform3DGroup = new Transform3DGroup();
+      //myTransform3DGroup.Children.Add(transform);
+      foreach (Tile tile1 in this.Children) {
+        tile1.rotations.Children.Add(transform);
+      }
+      animation.Completed += (sender, eventArgs) => {
+      };
+      rotation.BeginAnimation(AxisAngleRotation3D.AngleProperty, animation);
+    }
+
+
     /// <summary> Cube is 3 pieces * 3 </summary>
     public const int sidePieces = 3;
 
@@ -19,7 +121,7 @@ namespace Rubik2
     Cube2D projection;
     public static TimeSpan animationTime = TimeSpan.FromMilliseconds(300);
     public TimeSpan animationDuration;
-
+    private string movesString;
     private List<KeyValuePair<Move, RotationDirection>> moves;
     int index;
     bool animation_lock = false;
@@ -52,42 +154,23 @@ namespace Rubik2
             };
 
 
-    /// <summary> When Saved Cube is Loaded </summary>
-    //public RubikCube(CubeFace[,] projection) {
-    //  this.projection = new Cube2D(projection);
-    //  createCubeFromProjection();
-    //}
-    //
-    //private void createCubeFromProjection() {
-    //  Piece piece;
-    //  Dictionary<CubeFace, Material> colors;
-    //
-    //  double x_offset, y_offset, z_offset;
-    //
-    //  for (int y = 0; y < sidePieces; y++) {
-    //    for (int z = 0; z < sidePieces; z++) {
-    //      for (int x = 0; x < sidePieces; x++) {
-    //        if (y == 1 && x == 1 && z == 1) {
-    //          continue;
-    //        }
-    //
-    //        x_offset = (pieceSize + spaceSize) * x;
-    //        y_offset = (pieceSize + spaceSize) * y;
-    //        z_offset = (pieceSize + spaceSize) * z;
-    //
-    //        Point3D p = new Point3D(origin.X + x_offset, origin.Y + y_offset, origin.Z + z_offset);
-    //
-    //        colors = setFaceColorsFromProjection(x, y, z, projection.projection);
-    //
-    //        piece = new Piece(p, colors, getPossibleMoves(x, y, z));
-    //        this.Children.Add(piece);
-    //      }
-    //    }
-    //  }
-    //}
-
     public RubikCube() {
+      initAntiMoves();
       this.projection = new Cube2D();
+      drawFace1(27,Colors.Red);
+      rotate1("U'");
+      drawFace1(18, Colors.Green);
+      rotate1("U'");
+      drawFace1(9, Colors.DarkOrange);
+      rotate1("U'");
+      drawFace1(0, Colors.Blue);
+      rotate1("R'");
+      drawFace1(0, Colors.White);
+      rotate1("R ");
+      rotate1("R ");
+      drawFace1(0, Colors.Yellow);
+      rotate1("R'");
+      return;
 
       const double spaceSize = 0.00; // was 0.1 0.05
       const double cubeSize = Piece.pieceSize * sidePieces + spaceSize * (sidePieces - 1);
@@ -104,25 +187,6 @@ namespace Rubik2
               continue;
             }
 
-            //var msg = new StringBuilder();
-            //msg.Append($"Piece {p}");
-            //foreach (var color in colors) {
-            //  CubeFace v1 = color.Key;
-            //  //Material v2 = color.Value;
-            //  var v3 = (DiffuseMaterial)color.Value;
-            //  var v4 = v3.Brush;
-            //  if (v4 != new SolidColorBrush(Colors.Black)) {
-            //    if (((SolidColorBrush)v4).Color == Color.FromRgb(255,0,0)) msg.Append(" Red");
-            //    else if (((SolidColorBrush)v4).Color == Color.FromRgb(0, 0, 255)) msg.Append(" Blue");
-            //    else if (((SolidColorBrush)v4).Color == Color.FromRgb(255, 255, 0)) msg.Append(" Yellow");
-            //    else if (((SolidColorBrush)v4).Color == Color.FromRgb(255, 255, 255)) msg.Append(" White");
-            //    else if (((SolidColorBrush)v4).Color == Color.FromRgb(0, 128, 0)) msg.Append(" Green");
-            //    else if (((SolidColorBrush)v4).Color == Color.FromRgb(255, 140, 0)) msg.Append(" Orange");
-            //  }
-            //}
-            //foreach (var move in possibleMoves) msg.Append($" {move}");
-            //Debug.WriteLine(msg.ToString());
-
             pieceOffset.X = (Piece.pieceSize + spaceSize) * x;
             pieceOffset.Y = (Piece.pieceSize + spaceSize) * y;
             pieceOffset.Z = (Piece.pieceSize + spaceSize) * z;
@@ -131,7 +195,14 @@ namespace Rubik2
             var possibleMoves = getPossibleMoves(x, y, z);
 
             Point3D pieceOrigin = Point3D.Add(cubeOrigin, pieceOffset);
-            
+            string s1 = "";
+            foreach (var v1 in colors) {
+              var v2 = v1.Key;
+              s1 += $"{v2} ";
+            }
+
+
+            Debug.Print($"new Piece {pieceOrigin} {s1}");
             Piece piece = new Piece(pieceOrigin, colors, possibleMoves);
             this.Children.Add(piece);
           }
@@ -156,6 +227,17 @@ namespace Rubik2
 
       return moves;
     }
+    public void rotate(string moves) {
+      if (animation_lock) {
+        return;
+      }
+      animation_lock = true;
+      index = 0;
+      this.movesString = moves;
+      animateString(moves, index);
+      index++;
+    }
+
 
     public void rotate(List<KeyValuePair<Move, RotationDirection>> moves) {
       if (animation_lock) {
@@ -167,111 +249,122 @@ namespace Rubik2
       this.moves = moves;
 
       animate(index);
-      index++;
+    }
+
+    void animateString(string moves, int ix1) {
+      for (int i = ix1; i < moves.Length; ++i) {
+        string move2 = moves.Substring(i, 1).ToUpper();
+        if (move2 != " " && move2 != "'") {
+          if (i < moves.Length - 1 && moves.Substring(i + 1, 1) == "'") {
+            move2 += "'";
+            ++i;
+          }
+
+
+
+        }
+      }
     }
 
     void animate(int i) {
+      if (i >= moves.Count) {
+        animationDuration = RubikCube.animationTime;
+        animation_lock = false;
+        return;
+      }
+      ++index;
+      //string[] viewTable = MainWindow.viewTable;
+      //int viewTableIx = MainWindow.viewTableIx;
+      string m1 = moves[i].Key.ToString();
+      RotationDirection d1 = moves[i].Value;
+      int ix = viewTable[viewTableIx].IndexOf(m1);
+      string move2 = viewTable[0].Substring(ix, 1);
+      Move move = (Move)Enum.Parse(typeof(Move), move2);
+      KeyValuePair<Move, RotationDirection> move1 = new KeyValuePair<Move, RotationDirection>(move, d1);
 
+
+      bool rotateAll = false;
+      processRotate(move1, rotateAll);
+    }
+
+    private void processRotate(KeyValuePair<Move, RotationDirection> move1, bool rotateAll) {
       HashSet<Move> possibleMoves = new HashSet<Move>();
-      Vector3D axis = new Vector3D();
-      double angle = 90 * Convert.ToInt32(moves[i].Value);
-
-      axis = getRotationAxis(moves[i].Key);
+      Vector3D axis = getRotationAxis(move1.Key);
+      double angle = 90 * Convert.ToInt32(move1.Value);
 
       AxisAngleRotation3D rotation = new AxisAngleRotation3D(axis, angle);
       RotateTransform3D transform = new RotateTransform3D(rotation, new Point3D(0, 0, 0));
 
       DoubleAnimation animation = new DoubleAnimation(0, angle, animationDuration);
 
-      foreach (Piece piece in this.Children) {
+      if (rotateAll) {
+        foreach (Piece piece in this.Children) {
+          piece.rotations.Children.Add(transform);
+        }
+      }
+      else {
+        foreach (Piece piece in this.Children) {
           possibleMoves = new HashSet<Move>(piece.possibleMoves);
-          possibleMoves.Remove((Move)dominantFaces[moves[i].Key]);
+          possibleMoves.Remove((Move)dominantFaces[move1.Key]);
 
-          if (possibleMoves.Contains(moves[i].Key)) {
-            piece.possibleMoves = getNextPossibleMoves(piece.possibleMoves, moves[i].Key, moves[i].Value);
+          if (possibleMoves.Contains(move1.Key)) {
+            piece.possibleMoves = getNextPossibleMoves(piece.possibleMoves, move1.Key, move1.Value);
             piece.rotations.Children.Add(transform);
             rotation.BeginAnimation(AxisAngleRotation3D.AngleProperty, animation);
           }
-      }
-      animation.Completed += (sender, eventArgs) => {
-        if (moves.Count == 25 && i >= 24) {
-          animationDuration = RubikCube.animationTime;
         }
-        if (index < moves.Count) {
+        animation.Completed += (sender, eventArgs) => {
           animate(index);
-          index++;
-        }
-        else {
-          animation_lock = false;
-        }
-      };
+        };
+      }
       rotation.BeginAnimation(AxisAngleRotation3D.AngleProperty, animation);
-      projection.rotate(moves[i]);
+      projection.rotate(move1);
     }
 
-    //public bool rotate(KeyValuePair<Move, RotationDirection> move) {
-    //  if (animation_lock) {
-    //    return false;
-    //  }
+    public void rotateCube() {
 
-    //  HashSet<Move> possibleMoves = new HashSet<Move>();
-    //  Vector3D axis = getRotationAxis(move.Key);
+      KeyValuePair<Move, RotationDirection> m = new KeyValuePair<Move, RotationDirection>(Move.U, RotationDirection.ClockWise);
+      rotateAll(m);
+      viewTableIx = viewTableIx + 1;
+      if (viewTableIx == 4) viewTableIx = 0;
+      else if (viewTableIx == 8) viewTableIx = 4;
+    }
 
-    //  double angle = 90 * Convert.ToInt32(move.Value);
+    public void flipCube() {
+      //string[] viewTable = MainWindow.viewTable;
+      //int viewTableIx = MainWindow.viewTableIx;
 
-    //  AxisAngleRotation3D rotation = new AxisAngleRotation3D(axis, angle);
-    //  RotateTransform3D transform = new RotateTransform3D(rotation, new Point3D(0, 0, 0));
+      KeyValuePair<Move, RotationDirection> m = new KeyValuePair<Move, RotationDirection>(Move.R, RotationDirection.ClockWise);
+      //rubikCube.animationDuration = TimeSpan.FromSeconds(2);
+      rotateAll(m);
+      rotateAll(m);
+      switch (viewTableIx) {
+        case 4: viewTableIx = 0; break;
+        case 0: viewTableIx = 4; break;
+        default: viewTableIx = 8 - viewTableIx; break;
+      }
 
-    //  DoubleAnimation animation = new DoubleAnimation(0, angle, animationDuration);
+      //MainWindow.viewTableIx = viewTableIx;
+    }
 
-    //  foreach (Piece piece in this.Children) {
-    //    possibleMoves = new HashSet<Move>(piece.possibleMoves);
-    //    possibleMoves.Remove((Move)dominantFaces[move.Key]);
-    //    if (possibleMoves.Contains(move.Key)) {
-    //      piece.possibleMoves = getNextPossibleMoves(cpiece.possibleMoves, move.Key, move.Value);
 
-    //      piece.rotations.Children.Add(transform);
-    //    }
-    //  }
-
-    //  projection.rotate(move);
-    //  rotation.BeginAnimation(AxisAngleRotation3D.AngleProperty, animation);
-    //  App.Current.Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, new Action(() => { })).Wait();
-    //  return true;
-    //}
-
-    public bool rotateAll(KeyValuePair<Move, RotationDirection> move) {
+    public void rotateAll(KeyValuePair<Move, RotationDirection> move1) {
       if (animation_lock) {
-        return false;
+        return;
       }
-      HashSet<Move> possibleMoves = new HashSet<Move>();
-      Vector3D axis = getRotationAxis(move.Key);
-
-      double angle = 90 * Convert.ToInt32(move.Value);
-
-      AxisAngleRotation3D rotation = new AxisAngleRotation3D(axis, angle);
-      RotateTransform3D transform = new RotateTransform3D(rotation, new Point3D(0, 0, 0));
-
-      DoubleAnimation animation = new DoubleAnimation(0, angle, animationDuration);
-
-      foreach (Piece piece in this.Children) {
-        piece.rotations.Children.Add(transform);
-      }
-      projection.rotate(move);
-      rotation.BeginAnimation(AxisAngleRotation3D.AngleProperty, animation);
-      return true;
+      processRotate(move1, true);
     }
 
     private Vector3D getRotationAxis(Move m) {
       Vector3D axis = new Vector3D();
-      var viewTableIx = MainWindow.viewTableIx;
-      var viewTable = MainWindow.viewTable;
+      //var viewTableIx = MainWindow.viewTableIx;
+      //var viewTable = MainWindow.viewTable;
       string move2 = m.ToString();
       int ix = viewTable[viewTableIx].IndexOf(move2);
       string move1 = viewTable[0].Substring(ix, 1);
       Move move = (Move)Enum.Parse(typeof(Move), move1);
       // ix = 1 D => D !!
-      Debug.WriteLine($"getRotationAxis VTIX={viewTableIx} {m}=>{move}");
+      //Debug.WriteLine($"getRotationAxis VTIX={viewTableIx} {m}=>{move}");
       switch (move) {
         case Move.F:
         case Move.S: axis.X = 0; axis.Y = 0; axis.Z = -1; break;
@@ -450,128 +543,5 @@ namespace Rubik2
 
       return colors;
     }
-    //private Dictionary<CubeFace, Material> setFaceColorsFromProjection(int x, int y, int z, CubeFace[,] p) {
-    //  Dictionary<Tuple<int, int, int>, Dictionary<CubeFace, Material>> colors = new Dictionary<Tuple<int, int, int>, Dictionary<CubeFace, Material>> {
-    //            {new Tuple<int, int, int>(0, 0, 0), new Dictionary<CubeFace, Material>{
-    //                {CubeFace.L, faceColors[p[3,2]]},
-    //                {CubeFace.B, faceColors[p[2,3]]},
-    //                {CubeFace.D, faceColors[p[3,3]]},
-    //            }},
-    //            {new Tuple<int, int, int>(1, 0, 0), new Dictionary<CubeFace, Material>{
-    //                {CubeFace.D, faceColors[p[3,4]]},
-    //                {CubeFace.B, faceColors[p[2,4]]},
-    //            }},
-    //            {new Tuple<int, int, int>(2, 0, 0), new Dictionary<CubeFace, Material>{
-    //                {CubeFace.R, faceColors[p[3,6]]},
-    //                {CubeFace.B, faceColors[p[2,5]]},
-    //                {CubeFace.D, faceColors[p[3,5]]},
-    //            }},
-
-    //            {new Tuple<int, int, int>(0, 0, 1), new Dictionary<CubeFace, Material>{
-    //                {CubeFace.L, faceColors[p[4,2]]},
-    //                {CubeFace.D, faceColors[p[4,3]]},
-    //            }},
-    //            {new Tuple<int, int, int>(1, 0, 1), new Dictionary<CubeFace, Material>{
-    //                {CubeFace.D, faceColors[p[4,4]]},
-    //            }},
-    //            {new Tuple<int, int, int>(2, 0, 1), new Dictionary<CubeFace, Material>{
-    //                {CubeFace.R, faceColors[p[4,6]]},
-    //                {CubeFace.D, faceColors[p[4,5]]},
-    //            }},
-
-    //            {new Tuple<int, int, int>(0, 0, 2), new Dictionary<CubeFace, Material>{
-    //                {CubeFace.L, faceColors[p[5,2]]},
-    //                {CubeFace.F, faceColors[p[6,3]]},
-    //                {CubeFace.D, faceColors[p[5,3]]},
-    //            }},
-    //            {new Tuple<int, int, int>(1, 0, 2), new Dictionary<CubeFace, Material>{
-    //                {CubeFace.F, faceColors[p[6,4]]},
-    //                {CubeFace.D, faceColors[p[5,4]]},
-    //            }},
-    //            {new Tuple<int, int, int>(2, 0, 2), new Dictionary<CubeFace, Material>{
-    //                {CubeFace.R, faceColors[p[5,6]]},
-    //                {CubeFace.F, faceColors[p[6,5]]},
-    //                {CubeFace.D, faceColors[p[5,5]]},
-    //            }},
-
-    //            {new Tuple<int, int, int>(0, 1, 0), new Dictionary<CubeFace, Material>{
-    //                {CubeFace.L, faceColors[p[3,1]]},
-    //                {CubeFace.B, faceColors[p[1,3]]},
-    //            }},
-    //            {new Tuple<int, int, int>(1, 1, 0), new Dictionary<CubeFace, Material>{
-    //                {CubeFace.B, faceColors[p[1,4]]},
-    //            }},
-    //            {new Tuple<int, int, int>(2, 1, 0), new Dictionary<CubeFace, Material>{
-    //                {CubeFace.R, faceColors[p[3,7]]},
-    //                {CubeFace.B, faceColors[p[1,5]]},
-    //            }},
-
-    //            {new Tuple<int, int, int>(0, 1, 1), new Dictionary<CubeFace, Material>{
-    //                {CubeFace.L, faceColors[p[4,1]]},
-    //            }},/*
-    //            {new Tuple<int, int, int>(1, 1, 1), new Dictionary<CubeFace, Material>{
-    //                {CubeFace.B, faceColors[p[1,4]]}, //empty because we are in the middle of the cube!
-    //            }},*/
-    //            {new Tuple<int, int, int>(2, 1, 1), new Dictionary<CubeFace, Material>{
-    //                {CubeFace.R, faceColors[p[4,7]]},
-    //            }},
-
-    //            {new Tuple<int, int, int>(0, 1, 2), new Dictionary<CubeFace, Material>{
-    //                {CubeFace.L, faceColors[p[5,1]]},
-    //                {CubeFace.F, faceColors[p[7,3]]},
-    //            }},
-    //            {new Tuple<int, int, int>(1, 1, 2), new Dictionary<CubeFace, Material>{
-    //                {CubeFace.F, faceColors[p[7,4]]},
-    //            }},
-    //            {new Tuple<int, int, int>(2, 1, 2), new Dictionary<CubeFace, Material>{
-    //                {CubeFace.R, faceColors[p[5,7]]},
-    //                {CubeFace.F, faceColors[p[7,5]]},
-    //            }},
-
-    //            {new Tuple<int, int, int>(0, 2, 0), new Dictionary<CubeFace, Material>{
-    //                {CubeFace.L, faceColors[p[3,0]]},
-    //                {CubeFace.B, faceColors[p[0,3]]},
-    //                {CubeFace.U, faceColors[p[11,3]]},
-    //            }},
-    //            {new Tuple<int, int, int>(1, 2, 0), new Dictionary<CubeFace, Material>{
-    //                {CubeFace.U, faceColors[p[11,4]]},
-    //                {CubeFace.B, faceColors[p[0,4]]},
-    //            }},
-    //            {new Tuple<int, int, int>(2, 2, 0), new Dictionary<CubeFace, Material>{
-    //                {CubeFace.R, faceColors[p[3,8]]},
-    //                {CubeFace.B, faceColors[p[0,5]]},
-    //                {CubeFace.U, faceColors[p[11,5]]},
-    //            }},
-
-    //            {new Tuple<int, int, int>(0, 2, 1), new Dictionary<CubeFace, Material>{
-    //                {CubeFace.L, faceColors[p[4,0]]},
-    //                {CubeFace.U, faceColors[p[10,3]]},
-    //            }},
-    //            {new Tuple<int, int, int>(1, 2, 1), new Dictionary<CubeFace, Material>{
-    //                {CubeFace.U, faceColors[p[10,4]]},
-    //            }},
-    //            {new Tuple<int, int, int>(2, 2, 1), new Dictionary<CubeFace, Material>{
-    //                {CubeFace.R, faceColors[p[4,8]]},
-    //                {CubeFace.U, faceColors[p[10,5]]},
-    //            }},
-
-    //            {new Tuple<int, int, int>(0, 2, 2), new Dictionary<CubeFace, Material>{
-    //                {CubeFace.L, faceColors[p[5,0]]},
-    //                {CubeFace.F, faceColors[p[8,3]]},
-    //                {CubeFace.U, faceColors[p[9,3]]},
-    //            }},
-    //            {new Tuple<int, int, int>(1, 2, 2), new Dictionary<CubeFace, Material>{
-    //                {CubeFace.U, faceColors[p[9,4]]},
-    //                {CubeFace.F, faceColors[p[8,4]]},
-    //            }},
-    //            {new Tuple<int, int, int>(2, 2, 2), new Dictionary<CubeFace, Material>{
-    //                {CubeFace.R, faceColors[p[5,8]]},
-    //                {CubeFace.F, faceColors[p[8,5]]},
-    //                {CubeFace.U, faceColors[p[9,5]]},
-    //            }},
-    //        };
-
-    //  return colors[new Tuple<int, int, int>(x, y, z)];
-    //}
   }
 }

@@ -57,6 +57,7 @@
     </ApplicationDefinition>
     <Compile Include="Movement.cs" />
     <Compile Include="RubikCube.cs" />
+    <Compile Include="Tile.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

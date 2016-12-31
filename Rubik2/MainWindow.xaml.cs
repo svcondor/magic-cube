@@ -31,7 +31,7 @@ namespace Rubik2
 
     RubikCube rubikCube;
     MyModelVisual3D touchFaces;
-    Movement movement = new Movement();
+    //Movement movement = new Movement();
     HashSet<string> touchedFaces = new HashSet<string>();
 
     List<KeyValuePair<Move, RotationDirection>> doneMoves = new List<KeyValuePair<Move, RotationDirection>>();
@@ -55,7 +55,7 @@ namespace Rubik2
         }
         if (index != lastindex) {
           lastindex = index;
-          Debug.Print("Move: {0} {1}", moveList[index].ToString(), direction.ToString());
+          //Debug.Print("Move: {0} {1}", moveList[index].ToString(), direction.ToString());
           moves.Add(new KeyValuePair<Move, RotationDirection>(moveList[index], direction));
           doneMoves.Add(new KeyValuePair<Move, RotationDirection>(moveList[index], direction));
           ++i;
@@ -64,6 +64,7 @@ namespace Rubik2
       rubikCube.rotate(moves);
       gameOver = false;
       menuSolve.IsEnabled = true;
+      int[] ar1 = { 1, 0, 3 };
     }
 
     private HitTestResultBehavior resultCb(HitTestResult r) {
@@ -77,8 +78,10 @@ namespace Rubik2
 
       return HitTestResultBehavior.Continue;
     }
+
+
     private void Window_Loaded(object sender, RoutedEventArgs e) {
-      double cameraDistance = 8;  //was 8
+      double cameraDistance = 16;  //was 8
       var cameraPos = new Point3D {
         X = cameraDistance - 4,    // Was -0
         Y = cameraDistance - 3,    // Was -0
@@ -121,7 +124,6 @@ namespace Rubik2
       }
 
       gameOver = true;
-      if (gameOver) { }
       menuSolve.IsEnabled = false;
     }
 
@@ -137,44 +139,15 @@ namespace Rubik2
       }
     }
 
-    public static int viewTableIx = 0;
-    public static string[] viewTable = new string[] {
-      "UFLBRD",
-      "ULBRFD",
-      "UBRFLD",
-      "URFLBD",
-      "DBLFRU",
-      "DLFRBU",
-      "DFRBLU",
-      "DRBLFU"
-    };
 
     /// <summary> Rotate button pressed</summary>
     private void btnRotate_Click(object sender, RoutedEventArgs e) {
-      KeyValuePair<Move, RotationDirection> m = new KeyValuePair<Move, RotationDirection>(Move.U, RotationDirection.ClockWise);
-      rubikCube.rotateAll(m);
-      viewTableIx = viewTableIx + 1;
-      if (viewTableIx == 4) viewTableIx = 0;
-      else if (viewTableIx == 8) viewTableIx = 4;
+      rubikCube.rotateCube();
     }
 
     /// <summary> Flip button pressed</summary>
     private void btnFlip_Click(object sender, RoutedEventArgs e) {
-      KeyValuePair<Move, RotationDirection> m = new KeyValuePair<Move, RotationDirection>(Move.R, RotationDirection.ClockWise);
-      //rubikCube.animationDuration = TimeSpan.FromSeconds(2);
-      rubikCube.rotateAll(m);
-      rubikCube.rotateAll(m);
-      switch (viewTableIx) {
-        case 4: viewTableIx = 0; break;
-        case 0: viewTableIx = 4; break;
-        //case 1: viewTableIx = 5; break;
-        //case 2: viewTableIx = 6; break;
-        //case 3: viewTableIx = 7; break;
-        //case 5: viewTableIx = 1; break;
-        //case 6: viewTableIx = 2; break;
-        //case 7: viewTableIx = 3; break;
-        default: viewTableIx = 8 - viewTableIx; break;
-      }
+      rubikCube.flipCube();
     }
 
     private void btnUndo_Click(object sender, RoutedEventArgs e) {
@@ -194,7 +167,7 @@ namespace Rubik2
             move2 += "'";
             ++i;
           }
-          handleMove(moveList, move2);
+           handleMove(moveList, move2);
         }
       }
       if (moveList.Count > 0) {
@@ -216,17 +189,12 @@ namespace Rubik2
     /// <param name="moveList"></param>
     /// <param name="moveString"></param>
     private void handleMove(List<KeyValuePair<Move, RotationDirection>> moveList, string moveString) {
-      string moveString1 = moveString.Substring(0, 1).ToUpper();
+      string move1 = moveString.Substring(0, 1).ToUpper();
       RotationDirection d = RotationDirection.ClockWise;
       if (moveString.Length == 2 && moveString.Substring(1, 1) == "'") {
         d = RotationDirection.CounterClockWise;
       }
-      //if ((viewTableIx == 1 || viewTableIx == 3) && moveString1 != "U" && moveString1 != "D") {
-      //  if (d == RotationDirection.ClockWise) d = RotationDirection.CounterClockWise;
-      //  else d = RotationDirection.ClockWise;
-      //}
-      int ix = viewTable[viewTableIx].IndexOf(moveString1);
-      string move1 = viewTable[0].Substring(ix, 1);
+
       Move move = (Move)Enum.Parse(typeof(Move), move1);
       KeyValuePair<Move, RotationDirection> m = new KeyValuePair<Move, RotationDirection>(move, d);
       moveList.Add(m);
@@ -241,7 +209,6 @@ namespace Rubik2
 
     /// <summary> reset cube to solved position </summary>
     private void menuReset_Click(object sender, RoutedEventArgs e) {
-      viewTableIx = 0;
       init();
     }
 
@@ -260,7 +227,6 @@ namespace Rubik2
 
     private void menuScramble_Click(object sender, RoutedEventArgs e) {
 
-      viewTableIx = 0;
       init();
       rubikCube.animationDuration = TimeSpan.FromMilliseconds(1);
       scramble1(25);
