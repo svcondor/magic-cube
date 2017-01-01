@@ -1,32 +1,39 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Text;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Media3D;
-using System.Windows.Threading;
 
 namespace Rubik2
 {
+  public enum TileColor
+  {
+    Blue = 0,
+    Orange = 1,
+    Green = 2,
+    Red = 3,
+    White = 4,
+    Yellow = 5,
+    Gray = 6,
+    Black = 7
+  }
+
   public class RubikCube : ModelVisual3D
   {
-    int viewTableIx = 0;
-    static string[] viewTable = new string[] {
-      "UFLBRD",
-      "ULBRFD",
-      "UBRFLD",
-      "URFLBD",
-      "DBLFRU",
-      "DLFRBU",
-      "DFRBLU",
-      "DRBLFU"
-    };
 
-    static int[,] clockMoves = new int[8, 54];
+    public Dictionary<TileColor, DiffuseMaterial> tileColors = new Dictionary<TileColor, DiffuseMaterial> {
+      {TileColor.Blue, new DiffuseMaterial(new SolidColorBrush(Colors.Blue)) },
+      {TileColor.Orange, new DiffuseMaterial(new SolidColorBrush(Colors.DarkOrange)) },
+      {TileColor.Green, new DiffuseMaterial(new SolidColorBrush(Colors.Green)) },
+      {TileColor.Red, new DiffuseMaterial(new SolidColorBrush(Colors.Red)) },
+      {TileColor.White, new DiffuseMaterial(new SolidColorBrush(Colors.White)) },
+      {TileColor.Yellow, new DiffuseMaterial(new SolidColorBrush(Colors.Yellow)) },
+      {TileColor.Gray, new DiffuseMaterial(new SolidColorBrush(Colors.LightGray)) },
+      {TileColor.Black, new DiffuseMaterial(new SolidColorBrush(Colors.LightGray)) } };
 
-    static int[,] antiMoves = new int[8, 54];
-
+    static int[,] clockMoves;
+    static int[,] antiMoves;
+    const string moveCodes = "ULFRBDTS"; // Up Left Front Right Back Down roTate Spin
     static void initAntiMoves() {
       clockMoves = new int[8, 54] {
       { 27,27,27,0,0,0,0,0,0, -9,-9,-9,0,0,0,0,0,0, -9,-9,-9,0,0,0,0,0,0, -9,-9,-9,0,0,0,0,0,0, 2,4,6,-2,0,2,-6,-4,-2, 0,0,0,0,0,0,0,0,0 },
@@ -49,8 +56,7 @@ namespace Rubik2
 { 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, -27, -27, -27, -27, -27, -27, -27, -27, -27, 6, 2, -2, 4, 0, -4, 2, -2, -6, 2, 4, 6, -2, 0, 2, -6, -4, -2, },
 { 45, 45, 45, 45, 45, 45, 45, 45, 45, 6, 2, -2, 4, 0, -4, 2, -2, -6, 26, 24, 22, 20, 18, 16, 14, 12, 10, 2, 4, 6, -2, 0, 2, -6, -4, -2, -36, -36, -36, -36, -36, -36, -36, -36, -36, -19, -21, -23, -25, -27, -29, -31, -33, -35, }, };
 
-
-      if (false) {
+#if false
         for (int i = 0; i < 8; ++i) {
           for (int j = 0; j < 54; ++j) {
             if (clockMoves[i, j] != 0) {
@@ -78,470 +84,376 @@ namespace Rubik2
           Debug.Print($"{s1}}},");
 
         }
-      }
+#endif
     }
+    public Tile[] tiles = new Tile[54];
 
-    private void drawFace1(int TileIx,Color color) {
+    private void drawFace1(int tileIx) {
 
       for (int y = 3; y > -3; y -= 2) {
         for (int x = -3; x < 3; x += 2) {
-          Tile tile1 = new Tile(x, y, TileIx, color);
+          Tile tile1 = new Tile(x, y, tileIx);
+          tiles[tileIx] = tile1;
           this.Children.Add(tile1);
-          ++TileIx;
+          ++tileIx;
         }
       }
     }
 
-    void rotate1(string move2) {
-      GeometryModel3D myGeometryModel = new GeometryModel3D();
-      
-      Move move = (Move)Enum.Parse(typeof(Move), move2.Substring(0,1).ToUpper());
-      Vector3D axis = getRotationAxis(move);
+    public RubikCube() {
+      initAntiMoves();
+      drawFace1(0);
+      rotateImage("T ");
+      drawFace1(9);
+      rotateImage("T ");
+      drawFace1(18);
+      rotateImage("T ");
+      drawFace1(27);
+      rotateImage("T ");
+      rotateImage("S'");
+      drawFace1(36);
+      rotateImage("S ");
+      rotateImage("S ");
+      drawFace1(45);
+      rotateImage("S'");
+      resetTileColors();
+      setTileColors();
+    }
+
+    public void resetTileColors() {
+      TileColor color = TileColor.Gray;
+      for (int i = 0; i < 6; ++i) {
+        switch (i) {
+          case 0: color = TileColor.Blue; break;
+          case 1: color = TileColor.Orange; break;
+          case 2: color = TileColor.Green; break;
+          case 3: color = TileColor.Red; break;
+          case 4: color = TileColor.White; break;
+          case 5: color = TileColor.Yellow; break;
+        }
+
+        for (int j = 0; j < 9; ++j) {
+          Tile tile1 = tiles[i * 9 + j];
+          tile1.color = color;
+        }
+      }
+      setTileColors();
+    }
+
+    static string residualMoves = "";
+
+    public void rotateBoth(string moves) {
+      residualMoves = "";
+      moves = moves.ToUpper();
+      for (int i = 0; i < moves.Length; ++i) {
+        if (moveCodes.IndexOf(moves[i]) != -1) {
+          string move1;
+          if ((i + 1) < moves.Length && moves[i + 1] == '\'') {
+            move1 = moves.Substring(i, 2);
+            residualMoves = moves.Substring(i + 2);
+          }
+          else {
+            move1 = $"{moves[i]} ";
+            residualMoves = moves.Substring(i + 1);
+          }
+          rotateTable(move1, image: true, milliSeconds: 300);
+          break;
+        }
+      }
+    }
+
+
+    void rotateTable(string move, bool image = false, int milliSeconds = 1) {
+      int[,] moves;
+      if (move.Length > 1 && move[1] == '\'') {
+        moves = antiMoves;
+      }
+      else moves = clockMoves;
+      int moveType = moveCodes.IndexOf(move[0]);
+      var moveList = new List<Tuple<int, Tile>>();
+      for (int i = 0; i < tiles.Length; ++i) {
+        Tile tile1 = tiles[i];
+        if (tile1 == null) {
+
+        }
+        if (tile1 != null && moves[moveType, i] != 0) {
+          moveList.Add(Tuple.Create(i + moves[moveType, i], tile1));
+        }
+      }
+      if (image) {
+        Vector3D axis = getRotationAxis(move.ToUpper()[0]);
+        double angle = 90;
+        if (move.Length > 1 && move[1] == '\'') angle = -90;
+        AxisAngleRotation3D rotation = new AxisAngleRotation3D(axis, angle);
+        DoubleAnimation animation = new DoubleAnimation(0, angle, TimeSpan.FromMilliseconds(milliSeconds));
+        if (milliSeconds > 1) {
+          animation.Completed += (sender, eventArgs) => {
+            if (residualMoves != "") {
+              rotateBoth(residualMoves);
+            }
+          };
+        }
+        RotateTransform3D transform = new RotateTransform3D(rotation, new Point3D(0, 0, 0));
+        foreach (var tuple in moveList) {
+          tuple.Item2.rotations.Children.Add(transform);
+        }
+        rotation.BeginAnimation(AxisAngleRotation3D.AngleProperty, animation);
+      }
+      //if (milliSeconds > 1) {
+        foreach (var tuple in moveList) {
+          tuple.Item2.tileIx = tuple.Item1;
+          tiles[tuple.Item1] = tuple.Item2;
+        }
+      //}
+    }
+
+    void rotateImagexx(string move2, int milliSeconds = 1) {
+      rotateTable(move2, image: true, milliSeconds: 1);
+    }
+
+    void rotateImage(string move2, int milliSeconds = 1) {
+      Vector3D axis = getRotationAxis(move2.ToUpper()[0]);
       double angle = 90;
       if (move2.Length > 1 && move2[1] == '\'') angle = -90;
       AxisAngleRotation3D rotation = new AxisAngleRotation3D(axis, angle);
       RotateTransform3D transform = new RotateTransform3D(rotation, new Point3D(0, 0, 0));
-      DoubleAnimation animation = new DoubleAnimation(0, angle, TimeSpan.FromMilliseconds(1));
-      //var myTransform3DGroup = new Transform3DGroup();
-      //myTransform3DGroup.Children.Add(transform);
-      foreach (Tile tile1 in this.Children) {
-        tile1.rotations.Children.Add(transform);
+      DoubleAnimation animation = new DoubleAnimation(0, angle, TimeSpan.FromMilliseconds(milliSeconds));
+      int moveIx = moveCodes.IndexOf(move2[0]);
+      for (int i = 0; i < tiles.Length; ++i) {
+        if (clockMoves[moveIx, i] != 0) {
+          Tile tile1 = tiles[i];
+          if (tile1 != null) {
+            //Debug.Assert(i == tile1.tileIx, "rotate Image tileIx Error");
+            tile1.rotations.Children.Add(transform);
+          }
+        }
       }
-      animation.Completed += (sender, eventArgs) => {
-      };
+      //animation.Completed += (sender, eventArgs) => {
+      //  if (residualMoves != "") {
+      //    rotateBoth(residualMoves);
+      //  }
+      //};
       rotation.BeginAnimation(AxisAngleRotation3D.AngleProperty, animation);
     }
 
+    public void scramble2() {
+      resetTileColors();
+      Random rand = new Random();
+      for (int i = 0; i < 4; ++i) {
+        int r1 = rand.Next(6);
+        rotateTable(moveCodes.Substring(r1, 1) + " ", image: true, milliSeconds: 1);
+      }
+      setTileColors();
+    }
 
-    /// <summary> Cube is 3 pieces * 3 </summary>
-    public const int sidePieces = 3;
+    void setTileColors() {
+      foreach (Tile tile1 in tiles) {
 
-    Transform3DGroup rotations = new Transform3DGroup();
-
-    Cube2D projection;
-    public static TimeSpan animationTime = TimeSpan.FromMilliseconds(300);
-    public TimeSpan animationDuration;
-    private string movesString;
-    private List<KeyValuePair<Move, RotationDirection>> moves;
-    int index;
-    bool animation_lock = false;
-
-    private Dictionary<CubeFace, Material> faceColors = new Dictionary<CubeFace, Material> {
-            //{CubeFace.L, new SpecularMaterial(new SolidColorBrush(Colors.Red),0.5) },
-            //{CubeFace.D, new SpecularMaterial(new SolidColorBrush(Colors.Yellow),0.5)},
-            //{CubeFace.B, new SpecularMaterial(new SolidColorBrush(Colors.Green),0.5)},
-            //{CubeFace.R, new SpecularMaterial(new SolidColorBrush(Colors.DarkOrange),0.5)},
-            //{CubeFace.U, new SpecularMaterial(new SolidColorBrush(Colors.White),0.5)},
-            //{CubeFace.F, new SpecularMaterial(new SolidColorBrush(Colors.Blue),0.5)}
-            {CubeFace.L, new DiffuseMaterial(new SolidColorBrush(Colors.Red)) },
-            {CubeFace.D, new DiffuseMaterial(new SolidColorBrush(Colors.Yellow))},
-            {CubeFace.B, new DiffuseMaterial(new SolidColorBrush(Colors.Green))},
-            {CubeFace.R, new DiffuseMaterial(new SolidColorBrush(Colors.DarkOrange))},
-            {CubeFace.U, new DiffuseMaterial(new SolidColorBrush(Colors.White))},
-            {CubeFace.F, new DiffuseMaterial(new SolidColorBrush(Colors.Blue))}
-        };
-
-    Dictionary<Move, CubeFace> dominantFaces = new Dictionary<Move, CubeFace> {
-                {Move.B, CubeFace.R},
-                {Move.D, CubeFace.R},
-                {Move.E, CubeFace.R},
-                {Move.F, CubeFace.R},
-                {Move.L, CubeFace.F},
-                {Move.M, CubeFace.F},
-                {Move.R, CubeFace.F},
-                {Move.S, CubeFace.R},
-                {Move.U, CubeFace.F},
-            };
-
-
-    public RubikCube() {
-      initAntiMoves();
-      this.projection = new Cube2D();
-      drawFace1(27,Colors.Red);
-      rotate1("U'");
-      drawFace1(18, Colors.Green);
-      rotate1("U'");
-      drawFace1(9, Colors.DarkOrange);
-      rotate1("U'");
-      drawFace1(0, Colors.Blue);
-      rotate1("R'");
-      drawFace1(0, Colors.White);
-      rotate1("R ");
-      rotate1("R ");
-      drawFace1(0, Colors.Yellow);
-      rotate1("R'");
-      return;
-
-      const double spaceSize = 0.00; // was 0.1 0.05
-      const double cubeSize = Piece.pieceSize * sidePieces + spaceSize * (sidePieces - 1);
-      Point3D cubeOrigin = new Point3D(-cubeSize / 2, -cubeSize / 2, -cubeSize / 2);
-
-      Dictionary<CubeFace, Material> colors;
-
-      Vector3D pieceOffset = new Vector3D();
-
-      for (int y = 0; y < sidePieces; y++) {
-        for (int z = 0; z < sidePieces; z++) {
-          for (int x = 0; x < sidePieces; x++) {
-            if (y == 1 && x == 1 && z == 1) {
-              continue;
-            }
-
-            pieceOffset.X = (Piece.pieceSize + spaceSize) * x;
-            pieceOffset.Y = (Piece.pieceSize + spaceSize) * y;
-            pieceOffset.Z = (Piece.pieceSize + spaceSize) * z;
-
-            colors = setFaceColors(x, y, z);
-            var possibleMoves = getPossibleMoves(x, y, z);
-
-            Point3D pieceOrigin = Point3D.Add(cubeOrigin, pieceOffset);
-            string s1 = "";
-            foreach (var v1 in colors) {
-              var v2 = v1.Key;
-              s1 += $"{v2} ";
-            }
-
-
-            Debug.Print($"new Piece {pieceOrigin} {s1}");
-            Piece piece = new Piece(pieceOrigin, colors, possibleMoves);
-            this.Children.Add(piece);
-          }
-        }
+        //tile1.mesh1.Material = new DiffuseMaterial(new SolidColorBrush(tile1.color));
+        //tile1.mesh2.Material = new DiffuseMaterial(new SolidColorBrush(tile1.color));
+        tile1.mesh1.Material = tileColors[tile1.color];
+        tile1.mesh2.Material = tileColors[tile1.color];
       }
     }
 
-    private HashSet<Move> getPossibleMoves(int x, int y, int z) {
-      HashSet<Move> moves = new HashSet<Move>();
-
-      if (y == 0) moves.Add(Move.D);
-      else if (y == sidePieces - 1) moves.Add(Move.U);
-      else moves.Add(Move.E);
-
-      if (x == 0) moves.Add(Move.L);
-      else if (x == sidePieces - 1) moves.Add(Move.R);
-      else moves.Add(Move.M);
-
-      if (z == 0) moves.Add(Move.B);
-      else if (z == sidePieces - 1) moves.Add(Move.F);
-      else moves.Add(Move.S);
-
-      return moves;
-    }
-    public void rotate(string moves) {
-      if (animation_lock) {
-        return;
+    private Vector3D getRotationAxis(char m) {
+      Vector3D a = new Vector3D();
+      switch (m) {
+        case 'U': a.X = 0; a.Y = -1; a.Z = 0; break;
+        case 'L': a.X = 1; a.Y = 0; a.Z = 0; break;
+        case 'F': a.X = 0; a.Y = 0; a.Z = -1; break;
+        case 'R': a.X = -1; a.Y = 0; a.Z = 0; break;
+        case 'B': a.X = 0; a.Y = 0; a.Z = 1; break;
+        case 'D': a.X = 0; a.Y = 1; a.Z = 0; break;
+        case 'T': a.X = 0; a.Y = -1; a.Z = 0; break;
+        case 'S': a.X = -1; a.Y = 0; a.Z = 0; break;
       }
-      animation_lock = true;
-      index = 0;
-      this.movesString = moves;
-      animateString(moves, index);
-      index++;
+      return a;
     }
 
+    //private Vector3D getRotationAxis(Move m) {
+    //  Vector3D axis = new Vector3D();
+    //  //var viewTableIx = MainWindow.viewTableIx;
+    //  //var viewTable = MainWindow.viewTable;
+    //  string move2 = m.ToString();
+    //  int ix = viewTable[viewTableIx].IndexOf(move2);
+    //  string move1 = viewTable[0].Substring(ix, 1);
+    //  Move move = (Move)Enum.Parse(typeof(Move), move1);
+    //  // ix = 1 D => D !!
+    //  //Debug.WriteLine($"getRotationAxis VTIX={viewTableIx} {m}=>{move}");
+    //  switch (move) {
+    //    case Move.F:
+    //    case Move.S: axis.X = 0; axis.Y = 0; axis.Z = -1; break;
+    //    case Move.B: axis.X = 0; axis.Y = 0; axis.Z = 1; break;
 
-    public void rotate(List<KeyValuePair<Move, RotationDirection>> moves) {
-      if (animation_lock) {
-        return;
-      }
+    //    case Move.R: axis.X = -1; axis.Y = 0; axis.Z = 0; break;
+    //    case Move.L:
+    //    case Move.M: axis.X = 1; axis.Y = 0; axis.Z = 0; break;
 
-      animation_lock = true;
-      index = 0;
-      this.moves = moves;
+    //    case Move.U: axis.X = 0; axis.Y = -1; axis.Z = 0; break;
+    //    case Move.D:
+    //    case Move.E: axis.X = 0; axis.Y = 1; axis.Z = 0; break;
+    //  }
+    //  if (viewTableIx == 1 || viewTableIx == 3) {
+    //    switch (move) {
+    //      case Move.F:
+    //      case Move.S: axis.X = 0; axis.Y = 0; axis.Z = 1; break;
+    //      case Move.B: axis.X = 0; axis.Y = 0; axis.Z = -1; break;
 
-      animate(index);
-    }
+    //      case Move.R: axis.X = 1; axis.Y = 0; axis.Z = 0; break;
+    //      case Move.L:
+    //      case Move.M: axis.X = -1; axis.Y = 0; axis.Z = 0; break;
+    //    }
+    //  }
+    //  return axis;
+    //}
 
-    void animateString(string moves, int ix1) {
-      for (int i = ix1; i < moves.Length; ++i) {
-        string move2 = moves.Substring(i, 1).ToUpper();
-        if (move2 != " " && move2 != "'") {
-          if (i < moves.Length - 1 && moves.Substring(i + 1, 1) == "'") {
-            move2 += "'";
-            ++i;
-          }
+    //private HashSet<Move> getNextPossibleMoves(HashSet<Move> moves, Move m, RotationDirection direction) {
+    //  //HashSet<Move> iMoves = new HashSet<Move>(moves);
+    //  Dictionary<Move, List<List<Move>>> substitutions = new Dictionary<Move, List<List<Move>>> {
+    //            {Move.F, new List<List<Move>>{
+    //                new List<Move>{Move.U, Move.L, Move.U, Move.R},
+    //                new List<Move>{Move.U, Move.R, Move.D, Move.R},
+    //                new List<Move>{Move.D, Move.R, Move.D, Move.L},
+    //                new List<Move>{Move.D, Move.L, Move.U, Move.L},
+    //                new List<Move>{Move.U, Move.M, Move.E, Move.R},
+    //                new List<Move>{Move.E, Move.R, Move.M, Move.D},
+    //                new List<Move>{Move.M, Move.D, Move.L, Move.E},
+    //                new List<Move>{Move.L, Move.E, Move.U, Move.M},
+    //            }},
+    //            {Move.B, new List<List<Move>>{
+    //                new List<Move>{Move.R, Move.U, Move.L, Move.U},
+    //                new List<Move>{Move.R, Move.D, Move.R, Move.U},
+    //                new List<Move>{Move.L, Move.D, Move.R, Move.D},
+    //                new List<Move>{Move.L, Move.U, Move.L, Move.D},
+    //                new List<Move>{Move.R, Move.E, Move.M, Move.U},
+    //                new List<Move>{Move.D, Move.M, Move.R, Move.E},
+    //                new List<Move>{Move.E, Move.L, Move.D, Move.M},
+    //                new List<Move>{Move.M, Move.U, Move.E, Move.L},
+    //            }},
+    //            {Move.U, new List<List<Move>>{
+    //                new List<Move>{Move.B, Move.L, Move.B, Move.R},
+    //                new List<Move>{Move.B, Move.R, Move.F, Move.R},
+    //                new List<Move>{Move.F, Move.R, Move.F, Move.L},
+    //                new List<Move>{Move.F, Move.L, Move.B, Move.L},
+    //                new List<Move>{Move.B, Move.M, Move.S, Move.R},
+    //                new List<Move>{Move.S, Move.R, Move.M, Move.F},
+    //                new List<Move>{Move.M, Move.F, Move.L, Move.S},
+    //                new List<Move>{Move.L, Move.S, Move.B, Move.M},
+    //            }},
+    //            {Move.D, new List<List<Move>>{
+    //                new List<Move>{Move.R, Move.B, Move.L, Move.B},
+    //                new List<Move>{Move.R, Move.F, Move.R, Move.B},
+    //                new List<Move>{Move.L, Move.F, Move.R, Move.F},
+    //                new List<Move>{Move.L, Move.B, Move.L, Move.F},
+    //                new List<Move>{Move.R, Move.S, Move.M, Move.B},
+    //                new List<Move>{Move.F, Move.M, Move.R, Move.S},
+    //                new List<Move>{Move.S, Move.L, Move.F, Move.M},
+    //                new List<Move>{Move.M, Move.B, Move.S, Move.L},
+    //            }},
+    //            {Move.L, new List<List<Move>>{
+    //                new List<Move>{Move.B, Move.U, Move.F, Move.U},
+    //                new List<Move>{Move.F, Move.U, Move.F, Move.D},
+    //                new List<Move>{Move.F, Move.D, Move.B, Move.D},
+    //                new List<Move>{Move.B, Move.D, Move.B, Move.U},
+    //                new List<Move>{Move.S, Move.U, Move.E, Move.F},
+    //                new List<Move>{Move.E, Move.F, Move.D, Move.S},
+    //                new List<Move>{Move.D, Move.S, Move.B, Move.E},
+    //                new List<Move>{Move.B, Move.E, Move.S, Move.U},
+    //            }},
+    //            {Move.R, new List<List<Move>>{
+    //                new List<Move>{Move.U, Move.F, Move.U, Move.B},
+    //                new List<Move>{Move.D, Move.F, Move.U, Move.F},
+    //                new List<Move>{Move.D, Move.B, Move.D, Move.F},
+    //                new List<Move>{Move.U, Move.B, Move.D, Move.B},
+    //                new List<Move>{Move.F, Move.E, Move.U, Move.S},
+    //                new List<Move>{Move.S, Move.D, Move.F, Move.E},
+    //                new List<Move>{Move.E, Move.B, Move.S, Move.D},
+    //                new List<Move>{Move.U, Move.S, Move.E, Move.B},
+    //            }},
+    //            {Move.M, new List<List<Move>>{
+    //                new List<Move>{Move.U, Move.F, Move.D, Move.F},
+    //                new List<Move>{Move.D, Move.F, Move.D, Move.B},
+    //                new List<Move>{Move.B, Move.D, Move.B, Move.U},
+    //                new List<Move>{Move.B, Move.U, Move.F, Move.U},
+    //                new List<Move>{Move.E, Move.F, Move.D, Move.S},
+    //                new List<Move>{Move.D, Move.S, Move.B, Move.E},
+    //                new List<Move>{Move.B, Move.E, Move.U, Move.S},
+    //                new List<Move>{Move.U, Move.S, Move.E, Move.F},
+    //            }},
+    //            {Move.E, new List<List<Move>>{
+    //                new List<Move>{Move.L, Move.F, Move.R, Move.F},
+    //                new List<Move>{Move.R, Move.F, Move.R, Move.B},
+    //                new List<Move>{Move.R, Move.B, Move.L, Move.B},
+    //                new List<Move>{Move.L, Move.B, Move.L, Move.F},
+    //                new List<Move>{Move.M, Move.F, Move.R, Move.S},
+    //                new List<Move>{Move.R, Move.S, Move.B, Move.M},
+    //                new List<Move>{Move.B, Move.M, Move.L, Move.S},
+    //                new List<Move>{Move.L, Move.S, Move.M, Move.F},
+    //            }},
+    //            {Move.S, new List<List<Move>>{
+    //                new List<Move>{Move.U, Move.R, Move.D, Move.R},
+    //                new List<Move>{Move.D, Move.R, Move.D, Move.L},
+    //                new List<Move>{Move.D, Move.L, Move.U, Move.L},
+    //                new List<Move>{Move.U, Move.L, Move.U, Move.R},
+    //                new List<Move>{Move.M, Move.U, Move.E, Move.R},
+    //                new List<Move>{Move.E, Move.R, Move.M, Move.D},
+    //                new List<Move>{Move.M, Move.D, Move.E, Move.L},
+    //                new List<Move>{Move.E, Move.L, Move.M, Move.U},
+    //            }},
+    //        };
 
+    //  foreach (List<Move> s in substitutions[m]) {
+    //    if (direction == RotationDirection.ClockWise) {
+    //      if (moves.Contains(s[0]) && moves.Contains(s[1])) {
+    //        moves.Remove(s[0]);
+    //        moves.Add(s[2]);
+    //        moves.Remove(s[1]);
+    //        moves.Add(s[3]);
+    //        break;
+    //      }
+    //    }
+    //    else {
+    //      if (moves.Contains(s[2]) && moves.Contains(s[3])) {
+    //        moves.Remove(s[2]);
+    //        moves.Add(s[0]);
+    //        moves.Remove(s[3]);
+    //        moves.Add(s[1]);
+    //        break;
+    //      }
+    //    }
+    //  }
+    //  return moves;
+    //}
 
+    //private Dictionary<CubeFace, Material> setFaceColors(int x, int y, int z) {
+    //  Dictionary<CubeFace, Material> colors = new Dictionary<CubeFace, Material>();
 
-        }
-      }
-    }
+    //  if (x == 0) {
+    //    colors.Add(CubeFace.L, faceColors[CubeFace.L]);
+    //  }
 
-    void animate(int i) {
-      if (i >= moves.Count) {
-        animationDuration = RubikCube.animationTime;
-        animation_lock = false;
-        return;
-      }
-      ++index;
-      //string[] viewTable = MainWindow.viewTable;
-      //int viewTableIx = MainWindow.viewTableIx;
-      string m1 = moves[i].Key.ToString();
-      RotationDirection d1 = moves[i].Value;
-      int ix = viewTable[viewTableIx].IndexOf(m1);
-      string move2 = viewTable[0].Substring(ix, 1);
-      Move move = (Move)Enum.Parse(typeof(Move), move2);
-      KeyValuePair<Move, RotationDirection> move1 = new KeyValuePair<Move, RotationDirection>(move, d1);
+    //  if (y == 0) {
+    //    colors.Add(CubeFace.D, faceColors[CubeFace.D]);
+    //  }
 
+    //  if (z == 0) {
+    //    colors.Add(CubeFace.B, faceColors[CubeFace.B]);
+    //  }
 
-      bool rotateAll = false;
-      processRotate(move1, rotateAll);
-    }
+    //  if (x == sidePieces - 1) {
+    //    colors.Add(CubeFace.R, faceColors[CubeFace.R]);
+    //  }
 
-    private void processRotate(KeyValuePair<Move, RotationDirection> move1, bool rotateAll) {
-      HashSet<Move> possibleMoves = new HashSet<Move>();
-      Vector3D axis = getRotationAxis(move1.Key);
-      double angle = 90 * Convert.ToInt32(move1.Value);
+    //  if (y == sidePieces - 1) {
+    //    colors.Add(CubeFace.U, faceColors[CubeFace.U]);
+    //  }
 
-      AxisAngleRotation3D rotation = new AxisAngleRotation3D(axis, angle);
-      RotateTransform3D transform = new RotateTransform3D(rotation, new Point3D(0, 0, 0));
+    //  if (z == sidePieces - 1) {
+    //    colors.Add(CubeFace.F, faceColors[CubeFace.F]);
+    //  }
 
-      DoubleAnimation animation = new DoubleAnimation(0, angle, animationDuration);
-
-      if (rotateAll) {
-        foreach (Piece piece in this.Children) {
-          piece.rotations.Children.Add(transform);
-        }
-      }
-      else {
-        foreach (Piece piece in this.Children) {
-          possibleMoves = new HashSet<Move>(piece.possibleMoves);
-          possibleMoves.Remove((Move)dominantFaces[move1.Key]);
-
-          if (possibleMoves.Contains(move1.Key)) {
-            piece.possibleMoves = getNextPossibleMoves(piece.possibleMoves, move1.Key, move1.Value);
-            piece.rotations.Children.Add(transform);
-            rotation.BeginAnimation(AxisAngleRotation3D.AngleProperty, animation);
-          }
-        }
-        animation.Completed += (sender, eventArgs) => {
-          animate(index);
-        };
-      }
-      rotation.BeginAnimation(AxisAngleRotation3D.AngleProperty, animation);
-      projection.rotate(move1);
-    }
-
-    public void rotateCube() {
-
-      KeyValuePair<Move, RotationDirection> m = new KeyValuePair<Move, RotationDirection>(Move.U, RotationDirection.ClockWise);
-      rotateAll(m);
-      viewTableIx = viewTableIx + 1;
-      if (viewTableIx == 4) viewTableIx = 0;
-      else if (viewTableIx == 8) viewTableIx = 4;
-    }
-
-    public void flipCube() {
-      //string[] viewTable = MainWindow.viewTable;
-      //int viewTableIx = MainWindow.viewTableIx;
-
-      KeyValuePair<Move, RotationDirection> m = new KeyValuePair<Move, RotationDirection>(Move.R, RotationDirection.ClockWise);
-      //rubikCube.animationDuration = TimeSpan.FromSeconds(2);
-      rotateAll(m);
-      rotateAll(m);
-      switch (viewTableIx) {
-        case 4: viewTableIx = 0; break;
-        case 0: viewTableIx = 4; break;
-        default: viewTableIx = 8 - viewTableIx; break;
-      }
-
-      //MainWindow.viewTableIx = viewTableIx;
-    }
-
-
-    public void rotateAll(KeyValuePair<Move, RotationDirection> move1) {
-      if (animation_lock) {
-        return;
-      }
-      processRotate(move1, true);
-    }
-
-    private Vector3D getRotationAxis(Move m) {
-      Vector3D axis = new Vector3D();
-      //var viewTableIx = MainWindow.viewTableIx;
-      //var viewTable = MainWindow.viewTable;
-      string move2 = m.ToString();
-      int ix = viewTable[viewTableIx].IndexOf(move2);
-      string move1 = viewTable[0].Substring(ix, 1);
-      Move move = (Move)Enum.Parse(typeof(Move), move1);
-      // ix = 1 D => D !!
-      //Debug.WriteLine($"getRotationAxis VTIX={viewTableIx} {m}=>{move}");
-      switch (move) {
-        case Move.F:
-        case Move.S: axis.X = 0; axis.Y = 0; axis.Z = -1; break;
-        case Move.B: axis.X = 0; axis.Y = 0; axis.Z = 1; break;
-
-        case Move.R: axis.X = -1; axis.Y = 0; axis.Z = 0; break;
-        case Move.L:
-        case Move.M: axis.X = 1; axis.Y = 0; axis.Z = 0; break;
-
-        case Move.U: axis.X = 0; axis.Y = -1; axis.Z = 0; break;
-        case Move.D:
-        case Move.E: axis.X = 0; axis.Y = 1; axis.Z = 0; break;
-      }
-      if (viewTableIx == 1 || viewTableIx == 3) {
-        switch (move) {
-          case Move.F:
-          case Move.S: axis.X = 0; axis.Y = 0; axis.Z = 1; break;
-          case Move.B: axis.X = 0; axis.Y = 0; axis.Z = -1; break;
-
-          case Move.R: axis.X = 1; axis.Y = 0; axis.Z = 0; break;
-          case Move.L:
-          case Move.M: axis.X = -1; axis.Y = 0; axis.Z = 0; break;
-        }
-      }
-      return axis;
-    }
-
-    private HashSet<Move> getNextPossibleMoves(HashSet<Move> moves, Move m, RotationDirection direction) {
-      //HashSet<Move> iMoves = new HashSet<Move>(moves);
-      Dictionary<Move, List<List<Move>>> substitutions = new Dictionary<Move, List<List<Move>>> {
-                {Move.F, new List<List<Move>>{
-                    new List<Move>{Move.U, Move.L, Move.U, Move.R},
-                    new List<Move>{Move.U, Move.R, Move.D, Move.R},
-                    new List<Move>{Move.D, Move.R, Move.D, Move.L},
-                    new List<Move>{Move.D, Move.L, Move.U, Move.L},
-                    new List<Move>{Move.U, Move.M, Move.E, Move.R},
-                    new List<Move>{Move.E, Move.R, Move.M, Move.D},
-                    new List<Move>{Move.M, Move.D, Move.L, Move.E},
-                    new List<Move>{Move.L, Move.E, Move.U, Move.M},
-                }},
-                {Move.B, new List<List<Move>>{
-                    new List<Move>{Move.R, Move.U, Move.L, Move.U},
-                    new List<Move>{Move.R, Move.D, Move.R, Move.U},
-                    new List<Move>{Move.L, Move.D, Move.R, Move.D},
-                    new List<Move>{Move.L, Move.U, Move.L, Move.D},
-                    new List<Move>{Move.R, Move.E, Move.M, Move.U},
-                    new List<Move>{Move.D, Move.M, Move.R, Move.E},
-                    new List<Move>{Move.E, Move.L, Move.D, Move.M},
-                    new List<Move>{Move.M, Move.U, Move.E, Move.L},
-                }},
-                {Move.U, new List<List<Move>>{
-                    new List<Move>{Move.B, Move.L, Move.B, Move.R},
-                    new List<Move>{Move.B, Move.R, Move.F, Move.R},
-                    new List<Move>{Move.F, Move.R, Move.F, Move.L},
-                    new List<Move>{Move.F, Move.L, Move.B, Move.L},
-                    new List<Move>{Move.B, Move.M, Move.S, Move.R},
-                    new List<Move>{Move.S, Move.R, Move.M, Move.F},
-                    new List<Move>{Move.M, Move.F, Move.L, Move.S},
-                    new List<Move>{Move.L, Move.S, Move.B, Move.M},
-                }},
-                {Move.D, new List<List<Move>>{
-                    new List<Move>{Move.R, Move.B, Move.L, Move.B},
-                    new List<Move>{Move.R, Move.F, Move.R, Move.B},
-                    new List<Move>{Move.L, Move.F, Move.R, Move.F},
-                    new List<Move>{Move.L, Move.B, Move.L, Move.F},
-                    new List<Move>{Move.R, Move.S, Move.M, Move.B},
-                    new List<Move>{Move.F, Move.M, Move.R, Move.S},
-                    new List<Move>{Move.S, Move.L, Move.F, Move.M},
-                    new List<Move>{Move.M, Move.B, Move.S, Move.L},
-                }},
-                {Move.L, new List<List<Move>>{
-                    new List<Move>{Move.B, Move.U, Move.F, Move.U},
-                    new List<Move>{Move.F, Move.U, Move.F, Move.D},
-                    new List<Move>{Move.F, Move.D, Move.B, Move.D},
-                    new List<Move>{Move.B, Move.D, Move.B, Move.U},
-                    new List<Move>{Move.S, Move.U, Move.E, Move.F},
-                    new List<Move>{Move.E, Move.F, Move.D, Move.S},
-                    new List<Move>{Move.D, Move.S, Move.B, Move.E},
-                    new List<Move>{Move.B, Move.E, Move.S, Move.U},
-                }},
-                {Move.R, new List<List<Move>>{
-                    new List<Move>{Move.U, Move.F, Move.U, Move.B},
-                    new List<Move>{Move.D, Move.F, Move.U, Move.F},
-                    new List<Move>{Move.D, Move.B, Move.D, Move.F},
-                    new List<Move>{Move.U, Move.B, Move.D, Move.B},
-                    new List<Move>{Move.F, Move.E, Move.U, Move.S},
-                    new List<Move>{Move.S, Move.D, Move.F, Move.E},
-                    new List<Move>{Move.E, Move.B, Move.S, Move.D},
-                    new List<Move>{Move.U, Move.S, Move.E, Move.B},
-                }},
-                {Move.M, new List<List<Move>>{
-                    new List<Move>{Move.U, Move.F, Move.D, Move.F},
-                    new List<Move>{Move.D, Move.F, Move.D, Move.B},
-                    new List<Move>{Move.B, Move.D, Move.B, Move.U},
-                    new List<Move>{Move.B, Move.U, Move.F, Move.U},
-                    new List<Move>{Move.E, Move.F, Move.D, Move.S},
-                    new List<Move>{Move.D, Move.S, Move.B, Move.E},
-                    new List<Move>{Move.B, Move.E, Move.U, Move.S},
-                    new List<Move>{Move.U, Move.S, Move.E, Move.F},
-                }},
-                {Move.E, new List<List<Move>>{
-                    new List<Move>{Move.L, Move.F, Move.R, Move.F},
-                    new List<Move>{Move.R, Move.F, Move.R, Move.B},
-                    new List<Move>{Move.R, Move.B, Move.L, Move.B},
-                    new List<Move>{Move.L, Move.B, Move.L, Move.F},
-                    new List<Move>{Move.M, Move.F, Move.R, Move.S},
-                    new List<Move>{Move.R, Move.S, Move.B, Move.M},
-                    new List<Move>{Move.B, Move.M, Move.L, Move.S},
-                    new List<Move>{Move.L, Move.S, Move.M, Move.F},
-                }},
-                {Move.S, new List<List<Move>>{
-                    new List<Move>{Move.U, Move.R, Move.D, Move.R},
-                    new List<Move>{Move.D, Move.R, Move.D, Move.L},
-                    new List<Move>{Move.D, Move.L, Move.U, Move.L},
-                    new List<Move>{Move.U, Move.L, Move.U, Move.R},
-                    new List<Move>{Move.M, Move.U, Move.E, Move.R},
-                    new List<Move>{Move.E, Move.R, Move.M, Move.D},
-                    new List<Move>{Move.M, Move.D, Move.E, Move.L},
-                    new List<Move>{Move.E, Move.L, Move.M, Move.U},
-                }},
-            };
-
-      foreach (List<Move> s in substitutions[m]) {
-        if (direction == RotationDirection.ClockWise) {
-          if (moves.Contains(s[0]) && moves.Contains(s[1])) {
-            moves.Remove(s[0]);
-            moves.Add(s[2]);
-            moves.Remove(s[1]);
-            moves.Add(s[3]);
-            break;
-          }
-        }
-        else {
-          if (moves.Contains(s[2]) && moves.Contains(s[3])) {
-            moves.Remove(s[2]);
-            moves.Add(s[0]);
-            moves.Remove(s[3]);
-            moves.Add(s[1]);
-            break;
-          }
-        }
-      }
-      return moves;
-    }
-
-    public bool isUnscrambled() {
-      return projection.isUnscrambled();
-    }
-
-    private Dictionary<CubeFace, Material> setFaceColors(int x, int y, int z) {
-      Dictionary<CubeFace, Material> colors = new Dictionary<CubeFace, Material>();
-
-      if (x == 0) {
-        colors.Add(CubeFace.L, faceColors[CubeFace.L]);
-      }
-
-      if (y == 0) {
-        colors.Add(CubeFace.D, faceColors[CubeFace.D]);
-      }
-
-      if (z == 0) {
-        colors.Add(CubeFace.B, faceColors[CubeFace.B]);
-      }
-
-      if (x == sidePieces - 1) {
-        colors.Add(CubeFace.R, faceColors[CubeFace.R]);
-      }
-
-      if (y == sidePieces - 1) {
-        colors.Add(CubeFace.U, faceColors[CubeFace.U]);
-      }
-
-      if (z == sidePieces - 1) {
-        colors.Add(CubeFace.F, faceColors[CubeFace.F]);
-      }
-
-      return colors;
-    }
+    //  return colors;
+    //}
   }
 }

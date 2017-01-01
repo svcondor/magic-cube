@@ -19,13 +19,10 @@
     </Grid.RowDefinitions>
       
     <Menu IsMainMenu="True" Grid.ColumnSpan="2">
-      <MenuItem Header="_File">
-        <MenuItem Header="Animations" IsCheckable="True" IsChecked="True" Name="menuEnableAnimations" Checked="menuEnableAnimations_Checked" Unchecked="menuEnableAnimations_Unchecked" />
-      </MenuItem>
       <MenuItem Header="Reset"  Click="menuReset_Click"/>
-      <MenuItem Header="Scramble" Click="menuScramble_Click">
-      </MenuItem>
-      <MenuItem Header="Solve" Name="menuSolve" Click="menuSolve_Click" IsEnabled="False" />
+      <MenuItem Header="Scramble" Click="menuScramble_Click"/>
+
+      <!--<MenuItem Header="Solve" Name="menuSolve" Click="menuSolve_Click" IsEnabled="False" />-->
       <!--<MenuItem Header="Move 1" Name="menuMove1" Click="menuMove1_Click"/>-->
     </Menu>
       
