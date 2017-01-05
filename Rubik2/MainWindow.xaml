@@ -55,9 +55,10 @@
           <Button Content="R" Click="singleMove" />
           <Button Content="B" Click="singleMove" />
           <Button Content="D" Click="singleMove" />
+          <Button Content="Solve " Click="Solve_Click"/>
         </StackPanel>
         <StackPanel Grid.Column="1">
-          <Button Name="btnUndo" Click="btnUndo_Click" IsEnabled="False">Undo</Button>
+          <Button Name="btnUndo" Click="btnUndo_Click">Undo</Button>
           <Button Name="btnFlip" Click="btnFlip_Click">Flip</Button>
           <Button Content="U'" Click="singleMove" />
           <Button Content="L'" Click="singleMove" />

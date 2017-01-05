@@ -17,6 +17,7 @@ namespace Rubik2
     }
 
     RubikCube rubikCube;
+    public static Solver solver;
 
     private void Window_Loaded(object sender, RoutedEventArgs e) {
       double cameraDistance = 16;  //was 8
@@ -35,6 +36,7 @@ namespace Rubik2
       this.mainViewport.Camera = camera;
       this.mainViewport.Children.Remove(rubikCube);
       rubikCube = new RubikCube();
+      //solver = new Solver(rubikCube);
       this.mainViewport.Children.Add(rubikCube);
     }
 
@@ -52,7 +54,18 @@ namespace Rubik2
     }
 
     private void btnUndo_Click(object sender, RoutedEventArgs e) {
-
+      string moves = txtMoves.Text;
+      string moves1 = "";
+      char clock = '\'';
+      for (int i = moves.Length-1; i>=0; --i) {
+        if (moves[i] == '\'') clock = ' ';
+        else if (moves[i] != ' ') {
+          moves1 += moves[i];
+          moves1 += clock;
+          clock = '\'';
+        }
+      }
+      rubikCube.rotateBoth(moves1);
     }
 
     /// <summary> Single button pressed</summary>
@@ -65,6 +78,7 @@ namespace Rubik2
     private void singleMove(object sender, RoutedEventArgs e) {
       Button button = (Button)e.OriginalSource;
       string buttonContent = (string)button.Content;
+      txtMoves.Text += (buttonContent + " ");
       rubikCube.rotateBoth(buttonContent);
     }
 
@@ -78,10 +92,11 @@ namespace Rubik2
     /// <summary> reset cube to solved position </summary>
     private void menuReset_Click(object sender, RoutedEventArgs e) {
       rubikCube.resetTileColors();
+      
     }
 
     private void menuScramble_Click(object sender, RoutedEventArgs e) {
-      rubikCube.scramble2();
+      rubikCube.scramble();
     }
 
     private void mainViewport_MouseLeftButtonDown(object sender, MouseButtonEventArgs e) {
@@ -98,7 +113,7 @@ namespace Rubik2
         for (int i=0; i < rubikCube.tiles.Length; ++i) {
           Tile tile1 = rubikCube.tiles[i];
           if (tile1.mesh1 == g1 || tile1.mesh2 == g1) {
-            Debug.WriteLine($"MouseDown on Tile {i}");
+            Debug.WriteLine($"MouseDown on Tile {i} {i/9}-{i%9}");
             int col1 = (int)tile1.color;
             if (col1 >= (int)TileColor.Gray) {
               tile1.color = TileColor.Blue;
@@ -107,11 +122,15 @@ namespace Rubik2
               ++col1;
               tile1.color = (TileColor)col1;
             }
-            tile1.mesh1.Material = rubikCube.tileColors[tile1.color];
-            tile1.mesh2.Material = rubikCube.tileColors[tile1.color];
+            //tile1.mesh1.Material = rubikCube.tileColors[tile1.color];
+            //tile1.mesh2.Material = rubikCube.tileColors[tile1.color];
           }
         }
       }
+    }
+
+    private void Solve_Click(object sender, RoutedEventArgs e) {
+      solver.testSolve();
     }
   }
 }

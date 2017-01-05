@@ -57,6 +57,7 @@
     </ApplicationDefinition>
     <Compile Include="Helpers.cs" />
     <Compile Include="RubikCube.cs" />
+    <Compile Include="Solver.cs" />
     <Compile Include="Tile.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>

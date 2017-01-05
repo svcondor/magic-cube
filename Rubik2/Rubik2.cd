@@ -1,32 +1,18 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ClassDiagram MajorVersion="1" MinorVersion="1">
-  <Class Name="Rubik2.Piece">
-    <Position X="3.75" Y="0.75" Width="2.5" />
-    <TypeIdentifier>
-      <HashCode>iAAAAAQABACAgCAEAACAAAAAAAAAAAAAAAAAAAEAAAA=</HashCode>
-      <FileName>Piece.cs</FileName>
-    </TypeIdentifier>
-  </Class>
-  <Class Name="Rubik2.Cube2D">
-    <Position X="7.5" Y="1" Width="1.5" />
-    <TypeIdentifier>
-      <HashCode>ABAAAAAAAAAQkAABAADQA8AAABAABAAAgAAHAAEAAEE=</HashCode>
-      <FileName>Cube2D.cs</FileName>
-    </TypeIdentifier>
-  </Class>
   <Class Name="Rubik2.RubikCube">
     <Position X="0.5" Y="0.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>CBACEAAAAAAAgAgEAAgQgAAAQAAEAAQAQIAAAEgBEEA=</HashCode>
+      <HashCode>gAABiAAEAQBAAAAgAAAAAAAAAgAAAAQAgIAAAAAABAA=</HashCode>
       <FileName>RubikCube.cs</FileName>
     </TypeIdentifier>
   </Class>
-  <Enum Name="Rubik2.CubeFace">
-    <Position X="11.25" Y="1" Width="1.25" />
+  <Class Name="Rubik2.Tile">
+    <Position X="2.5" Y="0.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAUCAQA=</HashCode>
-      <FileName>Piece.cs</FileName>
+      <HashCode>AAAABAAAAAAoAAAEAACoAABAAAAgACCAAAEAAAAAAAA=</HashCode>
+      <FileName>Tile.cs</FileName>
     </TypeIdentifier>
-  </Enum>
+  </Class>
   <Font Name="Segoe UI" Size="9" />
 </ClassDiagram>
