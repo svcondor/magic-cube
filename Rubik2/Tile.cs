@@ -50,8 +50,8 @@ namespace Rubik2
       this.Transform = this.rotations;
       this.tileIx = tileIx;
       this.color = TileColor.Gray;
-      this.color2 = TileColor.x;
-      this.color3 = TileColor.x;
+      this.color2 = TileColor.none;
+      this.color3 = TileColor.none;
       Point3D p0 = new Point3D(x, y, 3);
       Point3D p1 = new Point3D(x, y - 2, 3);
       Point3D p2 = new Point3D(x + 2, y - 2, 3);

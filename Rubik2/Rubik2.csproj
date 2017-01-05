@@ -56,7 +56,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Helpers.cs" />
-    <Compile Include="RubikCube.cs" />
+    <Compile Include="Cube.cs" />
     <Compile Include="Solver.cs" />
     <Compile Include="Tile.cs" />
     <Page Include="MainWindow.xaml">

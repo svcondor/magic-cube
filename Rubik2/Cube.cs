@@ -17,7 +17,7 @@ namespace Rubik2
     Yellow = 5,
     Gray = 6,
     Black = 7,
-    x = 8
+    none = 8
   }
 
   public enum CubeFace
@@ -30,9 +30,39 @@ namespace Rubik2
     D = 5
   }
 
-  public class RubikCube : ModelVisual3D
+  public class Cube : ModelVisual3D
   {
-    public Tile[] tiles = new Tile[54];
+    public static Tile tile(int ix) {
+      return tiles[ix];
+    }
+    public static Tile tile(int face, int ix) {
+      return tile(face * 9 + ix);
+    }
+    public static Tile tile(CubeFace face, int ix) {
+      return tile((int)face * 9 + ix);
+    }
+
+    public static int findColors(TileColor color, TileColor color2=TileColor.none, TileColor color3=TileColor.none) {
+      if (color2 == TileColor.none) {
+        for (int i = 0; i < Cube.tiles.Length; i++) {
+          Tile tile1 = Cube.tile(i);
+          if (tile1.color == color && tile1.color3 == color3) {
+            return i;
+          }
+        }
+      }
+      else {
+        for (int i = 0; i < Cube.tiles.Length; i++) {
+          Tile tile1 = Cube.tile(i);
+          if (tile1.color == color && tile1.color2 == color2 && tile1.color3 == TileColor.none) {
+            return i;
+          }
+        }
+      }
+      return -1;
+    }
+
+    public static Tile[] tiles = new Tile[54];
 
     static int[,] clockMoves;
     static int[,] antiMoves;
@@ -113,7 +143,7 @@ namespace Rubik2
       }
     }
 
-    public RubikCube() {
+    public Cube() {
       buildMovesTables();
       drawFace1(0);
       rotateImage("T ");
@@ -145,7 +175,7 @@ namespace Rubik2
         }
 
         for (int j = 0; j < 9; ++j) {
-          Tile tile1 = tiles[i * 9 + j];
+          Tile tile1 = tile(i, j);
           tile1.color = color;
         }
       }
@@ -153,6 +183,12 @@ namespace Rubik2
       MainWindow.solver.setNearColors();
       //setTileColors();
     }
+
+
+
+
+
+
 
     static string residualMoves = "";
 
@@ -210,7 +246,7 @@ namespace Rubik2
       int moveType = moveCodes.IndexOf(move[0]);
       var moveList = new List<Tuple<int, Tile>>();
       for (int i = 0; i < tiles.Length; ++i) {
-        Tile tile1 = tiles[i];
+        Tile tile1 = tile(i);
         if (tile1 == null) {
 
         }

@@ -16,7 +16,7 @@ namespace Rubik2
       InitializeComponent();
     }
 
-    RubikCube rubikCube;
+    Cube rubikCube;
     public static Solver solver;
 
     private void Window_Loaded(object sender, RoutedEventArgs e) {
@@ -35,7 +35,7 @@ namespace Rubik2
       };
       this.mainViewport.Camera = camera;
       this.mainViewport.Children.Remove(rubikCube);
-      rubikCube = new RubikCube();
+      rubikCube = new Cube();
       //solver = new Solver(rubikCube);
       this.mainViewport.Children.Add(rubikCube);
     }
@@ -110,8 +110,8 @@ namespace Rubik2
       var v1 = mesh_result.ModelHit; // as ModelVisual3D;
       if (v1 is GeometryModel3D) {
         GeometryModel3D g1 = (GeometryModel3D)v1;
-        for (int i=0; i < rubikCube.tiles.Length; ++i) {
-          Tile tile1 = rubikCube.tiles[i];
+        for (int i=0; i < Cube.tiles.Length; ++i) {
+          Tile tile1 = Cube.tile(i);
           if (tile1.mesh1 == g1 || tile1.mesh2 == g1) {
             Debug.WriteLine($"MouseDown on Tile {i} {i/9}-{i%9}");
             int col1 = (int)tile1.color;
@@ -122,8 +122,6 @@ namespace Rubik2
               ++col1;
               tile1.color = (TileColor)col1;
             }
-            //tile1.mesh1.Material = rubikCube.tileColors[tile1.color];
-            //tile1.mesh2.Material = rubikCube.tileColors[tile1.color];
           }
         }
       }
