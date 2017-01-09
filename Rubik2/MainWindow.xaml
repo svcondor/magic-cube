@@ -18,13 +18,6 @@
       <!--<RowDefinition Height="1*" />-->
     </Grid.RowDefinitions>
       
-    <Menu IsMainMenu="True" Grid.ColumnSpan="2">
-      <MenuItem Header="Reset"  Click="menuReset_Click"/>
-      <MenuItem Header="Scramble" Click="menuScramble_Click"/>
-
-      <!--<MenuItem Header="Solve" Name="menuSolve" Click="menuSolve_Click" IsEnabled="False" />-->
-      <!--<MenuItem Header="Move 1" Name="menuMove1" Click="menuMove1_Click"/>-->
-    </Menu>
       
     <StackPanel Grid.Row="1" Margin="10,10,0,0">
       <ListBox Name="lstMoves" SelectionChanged="lstMoves_SelectionChanged">
@@ -56,6 +49,7 @@
           <Button Content="B" Click="singleMove" />
           <Button Content="D" Click="singleMove" />
           <Button Content="Solve " Click="Solve_Click"/>
+          <Button Content="Scramble" Click="menuScramble_Click"/>
         </StackPanel>
         <StackPanel Grid.Column="1">
           <Button Name="btnUndo" Click="btnUndo_Click">Undo</Button>
@@ -66,6 +60,10 @@
           <Button Content="R'" Click="singleMove" />
           <Button Content="B'" Click="singleMove" />
           <Button Content="D'" Click="singleMove" />
+          <Button Content="Slow" Click="btnSpeed_Click"/>
+          <Button Content="Reset"  Click="menuReset_Click"/>
+
+
         </StackPanel>
       </Grid>
     </StackPanel>

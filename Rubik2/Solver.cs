@@ -7,102 +7,35 @@ using System.Threading.Tasks;
 
 namespace Rubik2
 {
-  public class Piece
-  {
-    public TileColor color1;
-    public TileColor color2;
-    public TileColor color3;
-    public int ix1;
-    public int ix2;
-    public int ix3;
-  }
-
-
   public class Solver
   {
+    public int solveCount = 0;
+    public int stepCount = 0;
 
-    public static Piece[] sidePieces = new Piece[] {
-      new Piece() { color1= TileColor.Blue, color2=TileColor.White, ix1=1, ix2=43 }  ,
-      new Piece() { color1= TileColor.Blue, color2=TileColor.Orange, ix1=5, ix2=12 }  ,
-      new Piece() { color1= TileColor.Blue, color2=TileColor.Yellow, ix1=7, ix2=46 }  ,
-      new Piece() { color1= TileColor.Blue, color2=TileColor.Red, ix1=3, ix2=32 }  ,
-      new Piece() { color1= TileColor.Orange, color2=TileColor.White, ix1=10, ix2=41 },
-      new Piece() { color1= TileColor.Orange, color2=TileColor.Green, ix1=14, ix2=21 },
-      new Piece() { color1= TileColor.Orange, color2=TileColor.Yellow, ix1=16, ix2=50 },
-      new Piece() { color1= TileColor.Green, color2=TileColor.White, ix1=19, ix2=37 } ,
-      new Piece() { color1= TileColor.Green, color2=TileColor.Red, ix1=23, ix2=30 } ,
-      new Piece() { color1= TileColor.Green, color2=TileColor.Yellow, ix1=25, ix2=52 } ,
-      new Piece() { color1= TileColor.Red, color2=TileColor.White, ix1=28, ix2=39 },
-      new Piece() { color1= TileColor.Red, color2=TileColor.Yellow, ix1=34, ix2=48 }
-    };
-
-    public static Piece[] cornerPieces = new Piece[] {
-      new Piece() { color1= TileColor.Blue, color2=TileColor.Red, color3=TileColor.White,      ix1=0, ix2=29, ix3=42 },
-      new Piece() { color1= TileColor.Blue, color2=TileColor.White, color3=TileColor.Orange,   ix1=2, ix2=44, ix3=9 },
-      new Piece() { color1= TileColor.Blue, color2=TileColor.Yellow, color3=TileColor.Red,     ix1=6, ix2=45, ix3=35 },
-      new Piece() { color1= TileColor.Blue, color2=TileColor.Orange, color3=TileColor.Yellow,  ix1=8, ix2=15, ix3=47 },
-      new Piece() { color1= TileColor.Green, color2=TileColor.Orange, color3=TileColor.White,  ix1=18, ix2=11, ix3=38 },
-      new Piece() { color1= TileColor.Green, color2=TileColor.White, color3=TileColor.Red,     ix1=20, ix2=36, ix3=27 },
-      new Piece() { color1= TileColor.Green, color2=TileColor.Yellow, color3=TileColor.Orange, ix1=24, ix2=53, ix3=17 },
-      new Piece() { color1= TileColor.Green, color2=TileColor.Red, color3=TileColor.Yellow,    ix1=26, ix2=33, ix3=51 }
-    };
-
-
-    Cube Cube;
-    public Solver(Cube rubikCube) {
-      this.Cube = rubikCube;
-      //setSidePieces();
-    }
-
-    public void setNearColors() {
-      for (int i = 0; i < sidePieces.Length; ++i) {
-        Piece sp1 = sidePieces[i];
-        Tile tile = Cube.tile(sp1.ix1);
-        Debug.Assert(tile.color == sp1.color1, "SidePiece wrong color");
-        tile.color2 = sp1.color2;
-        tile = Cube.tile(sp1.ix2);
-        Debug.Assert(tile.color == sp1.color2, "SidePiece wrong color");
-        tile.color2 = sp1.color1;
-      }
-      for (int i = 0; i < cornerPieces.Length; ++i) {
-        Piece sp1 = cornerPieces[i];
-        Tile tile = Cube.tile(sp1.ix1);
-        Debug.Assert(tile.color == sp1.color1, "CornerPiece wrong color");
-        tile.color2 = sp1.color2;
-        tile.color3 = sp1.color3;
-        tile = Cube.tile(sp1.ix2);
-        Debug.Assert(tile.color == sp1.color2, "CornerPiece wrong color");
-        tile.color2 = sp1.color3;
-        tile.color3 = sp1.color1;
-        tile = Cube.tile(sp1.ix3);
-        Debug.Assert(tile.color == sp1.color3, "CornerPiece wrong color");
-        tile.color2 = sp1.color1;
-        tile.color3 = sp1.color2;
-      }
+    Cube cube;
+    public Solver(Cube cube) {
+      this.cube = cube;
     }
 
     public static int solveStep;
 
     public void testSolve() {
       if (solveStep == 0) {
+        stepCount = 0;
+        solveCount = 0;
         if (checkWhiteLayer() == 1) solveStep = 5;
         else solveStep = 1;
       }
-      //int rc = 0;
       if (solveStep == 1) solveStep += whiteOnTop();
-      if (solveStep == 2) solveStep += whiteCross1();
-      //if (solveStep == 3) { solveStep = 0; return; }
-      if (solveStep == 3) solveStep += whiteCorner1();
+      if (solveStep == 2) solveStep += whiteCross();
+      if (solveStep == 3) solveStep += whiteCorner();
       if (solveStep == 4) {
-        Debug.WriteLine($"testSolve - flip to yellow");
         if (Cube.tile(CubeFace.U,4).color == TileColor.White) {
-          Cube.rotateBoth("SS");
+          cube.rotateBoth("SS");
         }
         else solveStep += 1;
       }
-
       if (solveStep == 5) solveStep += middleSection();
-      //if (solveStep >= 5) solveStep = 0;
       if (solveStep == 6) solveStep += yellowCross();
       if (solveStep == 7) solveStep += orientateYellowCross();
       if (solveStep == 8) solveStep += yellowCorners();
@@ -135,8 +68,8 @@ namespace Rubik2
           else if (i == 0) moves = "UU";
           else if (i == 2) moves = "U'";
             moves += "R'D'RDR'D'RD";
-          Debug.WriteLine($"orientateYellowCorners moves={moves}");
-          Cube.rotateBoth(moves);
+          Debug.Write($"m={moves} ");
+          cube.rotateBoth(moves);
             return 0;
           }
         }
@@ -144,20 +77,21 @@ namespace Rubik2
       for (int i = 0; i < 4; i++) {
         if (Cube.tile(i,0).color == frontColor) {
           if (i == 0) {
-            Debug.WriteLine($"orientateYellowCorners DONE count={Cube.solveCount}");
+            Debug.WriteLine($"orientateYellowCorners steps={stepCount} total={solveCount}");
+            stepCount = 0;
+            solveCount = 0;
             return 1;
           }
           if (i == 1) moves = "U";
           else if (i == 2) moves = "UU";
           else if (i == 3) moves = "U'";
-          Debug.WriteLine($"orientateYellowCorners moves={moves}");
-          Cube.rotateBoth(moves);
+          Debug.Write($"m={moves} ");
+          cube.rotateBoth(moves);
           return 0;
         }
       }
       return 0;  
     }
-
 
     int yellowCorners() {
       int validCount = 0;
@@ -182,7 +116,8 @@ namespace Rubik2
         }
       }
       if (validCount == 4) {
-        Debug.WriteLine($"yellowCorners - DONE");
+        Debug.WriteLine($"yellowCorners steps={stepCount}");
+        stepCount = 0;
         return 1;
       }
       string moves = "";
@@ -192,11 +127,10 @@ namespace Rubik2
         else if (validFace == 3) moves = "T'";
       }
       moves += "URU'L'UR'U'L";
-      Debug.WriteLine($"yellowCorners moves={moves}");
-      Cube.rotateBoth(moves);
+      Debug.Write($"m={moves} ");
+      cube.rotateBoth(moves);
       return 0;
     }
-
 
     int orientateYellowCross() {
       string moves = "";
@@ -209,8 +143,8 @@ namespace Rubik2
           else if (i == 2) moves = "UU";
           else if (i == 1) moves = "U";
           moves += "RUR'URUUR'";
-          Debug.WriteLine($"orientateYellowCross moves={moves}");
-          Cube.rotateBoth(moves);
+          Debug.Write($"m={moves} ");
+          cube.rotateBoth(moves);
           return 0;
         }
       }
@@ -219,41 +153,38 @@ namespace Rubik2
       int rotate = ((int)top + 4 - (int)front) % 4;
 
       if (rotate == 0) {
-        Debug.WriteLine($"orientateYellowCross DONE");
+        Debug.WriteLine($"orientateYellowCross steps={stepCount}");
+        stepCount = 0;
         return 1;
       }
       if (rotate == 1) moves = "U";
       else if (rotate == 2) moves = "UU";
       else if (rotate == 3) moves = "U'";
-      Cube.rotateBoth(moves);
+      cube.rotateBoth(moves);
 
       return 0;
     }
 
-
     int yellowCross() {
       string moves = "";
-
       for (int i = 7; i > 0; i -= 2) {
         if (Cube.tile(CubeFace.U, i).color != TileColor.Yellow) {
           if (i == 5) moves = "U";
           else if (i == 3) moves = "U'";
           else if (i == 1) moves = "UU";
           moves += "R' U' F' U F R U'";
-          Debug.WriteLine($"Yellow cross - Moves= {moves}");
-          Cube.rotateBoth(moves);
+          Debug.Write($"m={moves} ");
+          cube.rotateBoth(moves);
           return 0;
         }
       }
-      Debug.WriteLine($"Yellow cross - DONE");
+      Debug.WriteLine($"Yellow cross steps={stepCount}");
+      stepCount = 0;
       return 1;
     }
 
-
-
-    private int middleSection() {
+    int middleSection() {
       string moves = "";
-      int rc = 0;
       for (int i = 7; i > 0; i -= 2) {
         Tile tile1 = Cube.tile(CubeFace.U, i);
         if (tile1.color != TileColor.Yellow && tile1.color2 != TileColor.Yellow) {
@@ -274,15 +205,14 @@ namespace Rubik2
           else if (rotates2 == 3) moves += "U'";
           else {
             if (tile1.color == Cube.tile(CubeFace.R, 4).color) {
-              moves += "U R U' R' U' F' U F";
+              moves += "URU'R'U'F'UF";
             }
             else {
-              moves += "U' L' U L U F U' F'";
+              moves += "U'L'ULUFU'F'";
             }
           }
-          rc = 1;
-          Debug.WriteLine($"midSection - found {tile1.color}/{tile1.color2} m={moves} rc={rc} ");
-          Cube.rotateBoth(moves);
+          Debug.Write($"m={moves} ");
+          cube.rotateBoth(moves);
           return 0;
         }
       }
@@ -302,24 +232,25 @@ namespace Rubik2
         else if (i == 3) moves = "T'";
         if (Cube.tile(i, 4).color != Cube.tile(i, 3).color) {
           moves += "U'L'ULUFU'F'";
-          Debug.WriteLine($"midSection - m={moves}  ");
-          Cube.rotateBoth(moves);
+          Debug.Write($"m={moves} ");
+          cube.rotateBoth(moves);
           return 0;
 
         }
         else if (Cube.tile(i, 4).color != Cube.tile(i, 5).color) {
           moves += "URU'R'U'F'UF";
-          Debug.WriteLine($"midSection - m={moves}  ");
-          Cube.rotateBoth(moves);
+          Debug.Write($"m={moves} ");
+          cube.rotateBoth(moves);
           return 0;
         }
 
       }
-      Debug.WriteLine($"midSection - DONE");
+      Debug.WriteLine($"midSection steps={stepCount}");
+      stepCount = 0;
       return 1;
     }
 
-    int whiteCorner1() {
+    int whiteCorner() {
       // Find tile that belongs in Front top right
       TileColor front = Cube.tile(CubeFace.F,4).color;
       int ixWhite = Cube.findColors(TileColor.White, color3:front);
@@ -376,7 +307,6 @@ namespace Rubik2
             case 8: moves = "DFDF'DFD'F'"; break;
           }
           break;
-
       }
       if (( Cube.tile(CubeFace.U, 0).color == TileColor.White)
         && (Cube.tile(CubeFace.U, 2).color == TileColor.White)
@@ -386,22 +316,20 @@ namespace Rubik2
         && (Cube.tile(CubeFace.R, 2).color == Cube.tile(CubeFace.R, 4).color)
         ) {
         if (moves == "") {
-          Debug.WriteLine($"whiteCorner1 - DONE");
+          Debug.WriteLine($"white Corner steps={stepCount}");
+          stepCount = 0;
           return 1;
         }
       }
       else {
-        moves += " T";
+        moves += "T";
       }
-
-      Debug.WriteLine($"whiteCorner1 - found {TileColor.White}/{front} at {ixWhite} {(CubeFace)(ixWhite / 9)}-{ixWhite % 9} m={moves}");
-      Cube.rotateBoth(moves);
+      Debug.Write($"m={moves} ");
+      cube.rotateBoth(moves);
       return 0;
     }
 
-
-
-    int whiteCross1() {
+    int whiteCross() {
       TileColor front = Cube.tile(CubeFace.F, 4).color;
       int ixWhite = Cube.findColors(TileColor.White, front);
       Debug.Assert(ixWhite != -1, $"whiteCross1 sidePiece White/{front} not found");
@@ -468,23 +396,23 @@ namespace Rubik2
         && (Cube.tile(CubeFace.R, 1).color == Cube.tile(CubeFace.R, 4).color)
         ) {
         if (moves == "") {
-          Debug.WriteLine($"whiteCross1 - DONE");
+          Debug.WriteLine($"white Cross steps={stepCount}");
+          stepCount = 0;
           return 1;
         }
       }
       else {
-        moves += " T";
+        moves += "T";
       }
-      Debug.WriteLine($"whiteCross1 - found {TileColor.White}/{front} at {ixWhite} {(CubeFace)(ixWhite / 9)}-{ixWhite % 9} m={moves}");
+      Debug.Write($"m={moves} ");
 
-      Cube.rotateBoth(moves);
+      cube.rotateBoth(moves);
       return 0;
     }
 
     int whiteOnTop() {
       string moves = "";
       if (Cube.tile(CubeFace.U, 4).color == TileColor.White) {
-        Debug.WriteLine($"whiteOnTop - DONE");
         return 1;
       }
       else if (Cube.tile(CubeFace.D, 4).color == TileColor.White) {
@@ -502,8 +430,7 @@ namespace Rubik2
       else {
         moves = "S";
       }
-      Debug.WriteLine($"whiteOnTop - m={moves} rc=1");
-      Cube.rotateBoth(moves);
+      cube.rotateBoth(moves);
       return 0;
     }
   }

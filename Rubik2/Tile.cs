@@ -5,7 +5,7 @@ using System.Windows.Media.Media3D;
 namespace Rubik2
 {
 
-  public class Tile : ModelVisual3D
+  public class Tile 
   {
     public override string ToString() => $"{tileIx} {tileIx/9}-{tileIx%9} {color} {color2} {color3}";
     //public ModelVisual3D modelVisual3D;
@@ -18,8 +18,8 @@ namespace Rubik2
       {TileColor.Yellow, new DiffuseMaterial(new SolidColorBrush(Colors.Yellow)) },
       {TileColor.Gray, new DiffuseMaterial(new SolidColorBrush(Colors.LightGray)) },
       {TileColor.Black, new DiffuseMaterial(new SolidColorBrush(Colors.LightGray)) } };
-
-     TileColor _color;
+    public ModelVisual3D modelVisual3D;
+    TileColor _color;
     public TileColor color2;
     public TileColor color3;
 
@@ -42,12 +42,10 @@ namespace Rubik2
     const double proudness = 0.01;  // dimension to keep colour proud of black border
 
     public int tileIx;
-    //public SidePiece sidePiece;
-    //public CornerPiece cornerPiece;
 
     public Tile(int x, int y, int tileIx) {
-      //modelVisual3D = new ModelVisual3D();
-      this.Transform = this.rotations;
+      modelVisual3D = new ModelVisual3D();
+      modelVisual3D.Transform = this.rotations;
       this.tileIx = tileIx;
       this.color = TileColor.Gray;
       this.color2 = TileColor.none;
@@ -67,8 +65,6 @@ namespace Rubik2
 
     void drawBlack(Point3D p0, Point3D p1, Point3D p2, Point3D p3) {
       Material defaultMaterial = new DiffuseMaterial(new SolidColorBrush(Colors.Black));
-
-      //  Debug.WriteLine($"Blackface {p0} {p1} {p2} {p3} ");
       ModelVisual3D r1 = new ModelVisual3D();
       ModelVisual3D r2 = new ModelVisual3D();
       ModelVisual3D r3 = new ModelVisual3D();
@@ -77,10 +73,10 @@ namespace Rubik2
       r2.Content = Helpers.createTriangleModel(p0, p2, p3, defaultMaterial);
       r3.Content = Helpers.createTriangleModel(p2, p1, p0, defaultMaterial);
       r4.Content = Helpers.createTriangleModel(p3, p2, p0, defaultMaterial);
-      this.Children.Add(r1);
-      this.Children.Add(r2);
-      this.Children.Add(r3);
-      this.Children.Add(r4);
+      this.modelVisual3D.Children.Add(r1);
+      this.modelVisual3D.Children.Add(r2);
+      this.modelVisual3D.Children.Add(r3);
+      this.modelVisual3D.Children.Add(r4);
     }
 
     void drawTile(Point3D p0, Point3D p1, Point3D p2, Point3D p3) {
@@ -93,8 +89,8 @@ namespace Rubik2
       this.mesh2 = Helpers.createTriangleModel(p0, p2, p3, tempMaterial);
       r1.Content = this.mesh1;
       r2.Content = this.mesh2;
-      this.Children.Add(r1);
-      this.Children.Add(r2);
+      this.modelVisual3D.Children.Add(r1);
+      this.modelVisual3D.Children.Add(r2);
     }
   }
 }

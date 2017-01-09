@@ -12,12 +12,12 @@ namespace Rubik2
   /// <summary> MainWindow.xaml code behind</summary>
   public partial class MainWindow : Window
   {
+
+    Cube cube;
+
     public MainWindow() {
       InitializeComponent();
     }
-
-    Cube rubikCube;
-    public static Solver solver;
 
     private void Window_Loaded(object sender, RoutedEventArgs e) {
       double cameraDistance = 16;  //was 8
@@ -34,10 +34,7 @@ namespace Rubik2
         FieldOfView = 45
       };
       this.mainViewport.Camera = camera;
-      this.mainViewport.Children.Remove(rubikCube);
-      rubikCube = new Cube();
-      //solver = new Solver(rubikCube);
-      this.mainViewport.Children.Add(rubikCube);
+      cube = new Cube(this.mainViewport);
     }
 
     private void Window_ContentRendered(object sender, EventArgs e) {
@@ -45,12 +42,12 @@ namespace Rubik2
 
     /// <summary> Rotate button pressed</summary>
     private void btnRotate_Click(object sender, RoutedEventArgs e) {
-      rubikCube.rotateBoth("T ");
+      cube.rotateBoth("T ");
     }
 
     /// <summary> Flip button pressed</summary>
     private void btnFlip_Click(object sender, RoutedEventArgs e) {
-      rubikCube.rotateBoth("S ");
+      cube.rotateBoth("S ");
     }
 
     private void btnUndo_Click(object sender, RoutedEventArgs e) {
@@ -65,13 +62,13 @@ namespace Rubik2
           clock = '\'';
         }
       }
-      rubikCube.rotateBoth(moves1);
+      cube.rotateBoth(moves1);
     }
 
     /// <summary> Single button pressed</summary>
     private void btnRun_Click(object sender, RoutedEventArgs e) {
       string moves = txtMoves.Text;
-      rubikCube.rotateBoth(moves);
+      cube.rotateBoth(moves);
     }
 
     /// <summary> Execute a single move  </summary>
@@ -79,7 +76,7 @@ namespace Rubik2
       Button button = (Button)e.OriginalSource;
       string buttonContent = (string)button.Content;
       txtMoves.Text += (buttonContent + " ");
-      rubikCube.rotateBoth(buttonContent);
+      cube.rotateBoth(buttonContent);
     }
 
     /// <summary> Move a list of moves to the textbox</summary>
@@ -91,12 +88,12 @@ namespace Rubik2
 
     /// <summary> reset cube to solved position </summary>
     private void menuReset_Click(object sender, RoutedEventArgs e) {
-      rubikCube.resetTileColors();
+      cube.resetTileColors();
       
     }
 
     private void menuScramble_Click(object sender, RoutedEventArgs e) {
-      rubikCube.scramble();
+      cube.scramble();
     }
 
     private void mainViewport_MouseLeftButtonDown(object sender, MouseButtonEventArgs e) {
@@ -110,7 +107,7 @@ namespace Rubik2
       var v1 = mesh_result.ModelHit; // as ModelVisual3D;
       if (v1 is GeometryModel3D) {
         GeometryModel3D g1 = (GeometryModel3D)v1;
-        for (int i=0; i < Cube.tiles.Length; ++i) {
+        for (int i=0; i < Cube.Count; ++i) {
           Tile tile1 = Cube.tile(i);
           if (tile1.mesh1 == g1 || tile1.mesh2 == g1) {
             Debug.WriteLine($"MouseDown on Tile {i} {i/9}-{i%9}");
@@ -127,8 +124,21 @@ namespace Rubik2
       }
     }
 
-    private void Solve_Click(object sender, RoutedEventArgs e) {
-      solver.testSolve();
+    void Solve_Click(object sender, RoutedEventArgs e) {
+      cube.solve();
+    }
+
+    private void btnSpeed_Click(object sender, RoutedEventArgs e) {
+      Button button = (Button)e.OriginalSource;
+      string buttonContent = (string)button.Content;
+      if ((string)button.Content == "Slow") {
+        button.Content = "Fast";
+        cube.speed = 10;
+      }
+      else {
+        button.Content = "Slow";
+        cube.speed = 500;
+      }
     }
   }
 }
