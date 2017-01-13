@@ -5,10 +5,15 @@ using System.Windows.Media.Media3D;
 namespace Rubik2
 {
 
-  public class Tile 
-  {
-    public override string ToString() => $"{tileIx} {tileIx/9}-{tileIx%9} {color} {color2} {color3}";
-    //public ModelVisual3D modelVisual3D;
+  public class Tile {
+
+    public override string ToString() {
+      string s1 = $"{tileIx} {(CubeFace)(tileIx / 9)}-{tileIx % 9} {color} {color2}";
+      if (color3 != TileColor.none) s1 += $" {color3}";
+      return s1;
+    }
+
+    /// <summary> DiffuseMaterial table for coloring tiles </summary>
     static Dictionary<TileColor, DiffuseMaterial> tileColors = new Dictionary<TileColor, DiffuseMaterial> {
       {TileColor.Blue, new DiffuseMaterial(new SolidColorBrush(Colors.Blue)) },
       {TileColor.Orange, new DiffuseMaterial(new SolidColorBrush(Colors.DarkOrange)) },
@@ -17,11 +22,10 @@ namespace Rubik2
       {TileColor.White, new DiffuseMaterial(new SolidColorBrush(Colors.White)) },
       {TileColor.Yellow, new DiffuseMaterial(new SolidColorBrush(Colors.Yellow)) },
       {TileColor.Gray, new DiffuseMaterial(new SolidColorBrush(Colors.LightGray)) },
-      {TileColor.Black, new DiffuseMaterial(new SolidColorBrush(Colors.LightGray)) } };
+      {TileColor.Black, new DiffuseMaterial(new SolidColorBrush(Colors.Black)) } };
+
+    /// <summary> Container for the visual tile including 4 black meshes and 2 colored meshes </summary>
     public ModelVisual3D modelVisual3D;
-    TileColor _color;
-    public TileColor color2;
-    public TileColor color3;
 
     public TileColor color {
       get {
@@ -34,61 +38,71 @@ namespace Rubik2
 
       }
     }
-    public GeometryModel3D mesh1;
-    public GeometryModel3D mesh2;
+    TileColor _color;   // Face color of tile
+    public TileColor color2;  // color of 1st or only adjacent tile in the piece
+    public TileColor color3;  // color od 2nd adjacent tile in piece if its a corner piece
+
+    public GeometryModel3D mesh1; // The face of the tile for hit testing
+    public GeometryModel3D mesh2; // The face of the tile for hit testing
 
     public Transform3DGroup rotations = new Transform3DGroup();
-    const double border = 0.14;  // black border around piece face
-    const double proudness = 0.01;  // dimension to keep colour proud of black border
+    const double border = 0.14;  // black border around colored tile
+    const double proudness = 0.01;  // dimension to keep colored tile proud of black border
 
     public int tileIx;
 
+    /// <summary>
+    /// Draw a tile with a black border tile size = 2.0 x 2.0
+    /// </summary>
+    /// <param name="x">Top Left</param>
+    /// <param name="y">Top Left</param>
+    /// <param name="tileIx">Index into tiles array</param>
     public Tile(int x, int y, int tileIx) {
-      modelVisual3D = new ModelVisual3D();
-      modelVisual3D.Transform = this.rotations;
+      modelVisual3D = new ModelVisual3D() {
+        Transform = this.rotations
+      };
       this.tileIx = tileIx;
-      this.color = TileColor.Gray;
-      this.color2 = TileColor.none;
-      this.color3 = TileColor.none;
+
       Point3D p0 = new Point3D(x, y, 3);
       Point3D p1 = new Point3D(x, y - 2, 3);
       Point3D p2 = new Point3D(x + 2, y - 2, 3);
       Point3D p3 = new Point3D(x + 2, y, 3);
-      drawBlack(p0, p1, p2, p3);
+      drawBlackTile(p0, p1, p2, p3);
+
       p0 = new Point3D(x + border, y - border, 3 + proudness);
       p1 = new Point3D(x + border, y - 2 + border, 3 + proudness);
       p2 = new Point3D(x + 2 - border, y - 2 + border, 3 + proudness);
       p3 = new Point3D(x + 2 - border, y - border, 3 + proudness);
-      drawTile(p0, p1, p2, p3);
-      
+      drawTileFace(p0, p1, p2, p3);
     }
 
-    void drawBlack(Point3D p0, Point3D p1, Point3D p2, Point3D p3) {
-      Material defaultMaterial = new DiffuseMaterial(new SolidColorBrush(Colors.Black));
-      ModelVisual3D r1 = new ModelVisual3D();
-      ModelVisual3D r2 = new ModelVisual3D();
-      ModelVisual3D r3 = new ModelVisual3D();
-      ModelVisual3D r4 = new ModelVisual3D();
-      r1.Content = Helpers.createTriangleModel(p0, p1, p2, defaultMaterial);
-      r2.Content = Helpers.createTriangleModel(p0, p2, p3, defaultMaterial);
-      r3.Content = Helpers.createTriangleModel(p2, p1, p0, defaultMaterial);
-      r4.Content = Helpers.createTriangleModel(p3, p2, p0, defaultMaterial);
+    /// <summary> Draw a black rectange (2 mesh triangles) to appear behind the colored tile 
+    /// and draw the reverse rectangle to show black when the tile is not visible</summary>
+    /// <param name="p0">Top Left</param>
+    /// <param name="p1">Bottom Left</param>
+    /// <param name="p2">Bottom Right</param>
+    /// <param name="p3">Top Right</param>
+    void drawBlackTile(Point3D p0, Point3D p1, Point3D p2, Point3D p3) {
+      var r1 = new ModelVisual3D() { Content = Helpers.createTriangleModel(p0, p1, p2, tileColors[TileColor.Black]) };
+      var r2 = new ModelVisual3D() { Content = Helpers.createTriangleModel(p0, p2, p3, tileColors[TileColor.Black]) };
+      var r3 = new ModelVisual3D() { Content = Helpers.createTriangleModel(p2, p1, p0, tileColors[TileColor.Black]) };
+      var r4 = new ModelVisual3D() { Content = Helpers.createTriangleModel(p3, p2, p0, tileColors[TileColor.Black]) };
       this.modelVisual3D.Children.Add(r1);
       this.modelVisual3D.Children.Add(r2);
       this.modelVisual3D.Children.Add(r3);
       this.modelVisual3D.Children.Add(r4);
     }
 
-    void drawTile(Point3D p0, Point3D p1, Point3D p2, Point3D p3) {
-      Material tempMaterial = new DiffuseMaterial(new SolidColorBrush(Colors.LightPink));
-
-      ModelVisual3D r1 = new ModelVisual3D();
-      ModelVisual3D r2 = new ModelVisual3D();
-
-      this.mesh1 = Helpers.createTriangleModel(p0, p1, p2, tempMaterial);
-      this.mesh2 = Helpers.createTriangleModel(p0, p2, p3, tempMaterial);
-      r1.Content = this.mesh1;
-      r2.Content = this.mesh2;
+    /// <summary> Draw a coloured rectange (2 mesh triangles) inside of and slightly proud of the black rectangle </summary>
+    /// <param name="p0">Top Left</param>
+    /// <param name="p1">Bottom Left</param>
+    /// <param name="p2">Bottom Right</param>
+    /// <param name="p3">Top Right</param>
+    void drawTileFace(Point3D p0, Point3D p1, Point3D p2, Point3D p3) {
+      this.mesh1 = Helpers.createTriangleModel(p0, p1, p2, tileColors[TileColor.Gray]);
+      this.mesh2 = Helpers.createTriangleModel(p0, p2, p3, tileColors[TileColor.Gray]);
+      var r1 = new ModelVisual3D() { Content = this.mesh1 };
+      var r2 = new ModelVisual3D() { Content = this.mesh2 };
       this.modelVisual3D.Children.Add(r1);
       this.modelVisual3D.Children.Add(r2);
     }

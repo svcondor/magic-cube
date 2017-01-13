@@ -8,6 +8,7 @@ using System.Windows.Media.Media3D;
 
 namespace Rubik2
 {
+  /// <summary> Color codes for each tile surface </summary>
   public enum TileColor
   {
     Blue = 0,
@@ -21,6 +22,7 @@ namespace Rubik2
     none = 8
   }
 
+  /// <summary> Codes for each cube face F-front R-right B-Back L-left U-up D-down</summary>
   public enum CubeFace
   {
     F = 0,
@@ -33,7 +35,7 @@ namespace Rubik2
 
   public class Cube 
   {
-    public int speed = 500;
+    public int speed = 300;
     static Solver solver;
     ModelVisual3D modelVisual3D;
     static Tile[] tiles = new Tile[54];
@@ -43,45 +45,71 @@ namespace Rubik2
     //TODO change TS to YX 
     static string residualMoves = "";
 
+    /// <summary> Cube constructor </summary>
+    /// <param name="mainViewport"></param>
     public Cube(Viewport3D mainViewport) {
       modelVisual3D = new ModelVisual3D();
       mainViewport.Children.Add(modelVisual3D);
       solver = new Solver(this);
 
+      // Build a table for each possible move for each tile on the cube
+      // cubeDetails.xlsx gives details of the math
       buildMovesTables();
-      drawFace1(0);
+
+      // Draw each cubeFace on the front face and then rotate the whole visual cube for the next face
+      // this makes the math in drawface simpler
+      drawFace(CubeFace.F);
       rotateImage("T ");
-      drawFace1(9);
+      drawFace(CubeFace.R);
       rotateImage("T ");
-      drawFace1(18);
+      drawFace(CubeFace.B);
       rotateImage("T ");
-      drawFace1(27);
+      drawFace(CubeFace.L);
       rotateImage("T ");
       rotateImage("S'");
-      drawFace1(36);
+      drawFace(CubeFace.U);
       rotateImage("S ");
       rotateImage("S ");
-      drawFace1(45);
+      drawFace(CubeFace.D);
       rotateImage("S'");
       resetTileColors();
     }
 
+    /// <summary> get Tile by index </summary>
+    /// <param name="ix">Tile index 0 - 53</param>
+    /// <returns></returns>
     public static Tile tile(int ix) {
       return tiles[ix];
     }
+
+    /// <summary> Get tile by (int)Cubeface and relative tile 0-8</summary>
+    /// <param name="face"> face number 0-5</param>
+    /// <param name="ix"> tile number 0-8</param>
+    /// <returns>Tile</returns>
     public static Tile tile(int face, int ix) {
       return tile(face * 9 + ix);
     }
+
+    /// <summary> Get tile by Cubeface and relative tile 0-8</summary>
+    /// <param name="face">CubeFace. F R B L U D </param>
+    /// <param name="ix"> tile number 0-8</param>
+    /// <returns> Tile </returns>
     public static Tile tile(CubeFace face, int ix) {
       return tile((int)face * 9 + ix);
     }
 
+    /// <summary> Get tiles Count = 54 </summary>
     public static int Count {
       get {
         return tiles.Length;
       }
     }
 
+    /// <summary> Find the index of a tile with specific color and adjacent color </summary>
+    /// <param name="color"> main color of tile</param>
+    /// <param name="color2"> color of adjacent face of side piece or none for corner piece</param>
+    /// <param name="color3"> color of ajacent fae of corner piece or none for side piece</param>
+    /// <returns>-1 if not found</returns>
     public static int findColors(TileColor color, TileColor color2=TileColor.none, TileColor color3=TileColor.none) {
       if (color2 == TileColor.none) {
         for (int i = 0; i < Cube.tiles.Length; i++) {
@@ -102,6 +130,7 @@ namespace Rubik2
       return -1;
     }
 
+    /// <summary> Reset all colors to unscramble cube </summary>
     public void resetTileColors() {
       TileColor color = TileColor.Gray;
       for (int i = 0; i < 6; ++i) {
@@ -117,20 +146,24 @@ namespace Rubik2
         for (int j = 0; j < 9; ++j) {
           Tile tile1 = tile(i, j);
           tile1.color = color;
+          tile1.color2 = TileColor.none;
+          tile1.color3 = TileColor.none;
           Debug.Assert(tile1.tileIx == i * 9 + j, "tileIx error");
         }
       }
-      setNearColors();
+      setAdjacentColors();
     }
 
+    /// <summary> Call Solver.solve to solve the cube </summary>
     public void solve() {
-      solver.testSolve();
+      solver.solve();
     }
 
+    /// <summary> Scramble the cube into one of 1000 posibilities - 1000 limit is for reproducable debugging </summary>
     public void scramble() {
       resetTileColors();
       Random rand1 = new Random();
-      int r2 = rand1.Next(100);
+      int r2 = rand1.Next(1000);
       //r2 = 75;
       Debug.WriteLine($"");
       Debug.WriteLine($"Scramble Seed={r2}");
@@ -145,7 +178,7 @@ namespace Rubik2
       if (residualMoves == "") {
         if (moves == "") {
           if (Solver.solveStep != 0) {
-            solver.testSolve();
+            solver.solve();
           }
         }
         else {
@@ -214,7 +247,7 @@ namespace Rubik2
             if (residualMoves == " ") {
               residualMoves = "";
               if (Solver.solveStep != 0) {
-                solver.testSolve();
+                solver.solve();
               }
             }
             else if (residualMoves != "") {
@@ -271,7 +304,12 @@ namespace Rubik2
 
     void buildMovesTables() {
       clockMoves = new int[8, 54] {
-      { 27,27,27,0,0,0,0,0,0, -9,-9,-9,0,0,0,0,0,0, -9,-9,-9,0,0,0,0,0,0, -9,-9,-9,0,0,0,0,0,0, 2,4,6,-2,200,2,-6,-4,-2, 0,0,0,0,0,0,0,0,0 },
+      { 27,27,27,0,0,0,0,0,0,
+          -9,-9,-9,0,0,0,0,0,0,
+          -9,-9,-9,0,0,0,0,0,0,
+          -9,-9,-9,0,0,0,0,0,0,
+          2,4,6,-2,200,2,-6,-4,-2,
+          0,0,0,0,0,0,0,0,0 },
 { 45,0,0,45,0,0,45,0,0,0,0,0,0,0,0,0,0,0,0,0,22,0,0,16,0,0,10,2,4,6,-2,0,2,-6,-4,-2,-36,0,0,-36,0,0,-36,0,0,-19,0,0,-25,0,0,-31,0,0 },
 { 2,4,6,-2,200,2,-6,-4,-2,38,0,0,34,0,0,30,0,0,0,0,0,0,0,0,0,0,0,0,0,15,0,0,11,0,0,7,0,0,0,0,0,0,-33,-31,-29,-16,-14,-12,0,0,0,0,0,0  },
 { 0,0,36,0,0,36,0,0,36,2,4,6,-2,200,2,-6,-4,-2,35,0,0,29,0,0,23,0,0,0,0,0,0,0,0,0,0,0,0,0,-14,0,0,-20,0,0,-26,0,0,-45,0,0,-45,0,0,-45 },
@@ -288,7 +326,7 @@ namespace Rubik2
   -10,-12,-14,-16,-18,-20,-22,-24,-26,
   -45,-45,-45,-45,-45,-45,-45,-45,-45
  } };
-      antiMoves = new int[8, 54] {
+      antiMoves = new int[8, 54];/* {
       { 9, 9, 9, 0, 0, 0, 0, 0, 0, 9, 9, 9, 0, 0, 0, 0, 0, 0, 9, 9, 9, 0, 0, 0, 0, 0, 0, -27, -27, -27, 0, 0, 0, 0, 0, 0, 6, 2, -2, 4, 200, -4, 2, -2, -6, 0, 0, 0, 0, 0, 0, 0, 0, 0, },
 { 36, 0, 0, 36, 0, 0, 36, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 31, 0, 0, 25, 0, 0, 19, 6, 2, -2, 4, 0, -4, 2, -2, -6, -10, 0, 0, -16, 0, 0, -22, 0, 0, -45, 0, 0, -45, 0, 0, -45, 0, 0, },
 { 6, 2, -2, 4, 200, -4, 2, -2, -6, 33, 0, 0, 31, 0, 0, 29, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16, 0, 0, 14, 0, 0, 12, 0, 0, 0, 0, 0, 0, -7, -11, -15, -30, -34, -38, 0, 0, 0, 0, 0, 0, },
@@ -296,8 +334,8 @@ namespace Rubik2
 { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 42, 0, 0, 38, 0, 0, 34, 6, 2, -2, 4, 0, -4, 2, -2, -6, 11, 0, 0, 7, 0, 0, 3, 0, 0, -25, -23, -21, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -24, -22, -20, },
 { 0, 0, 0, 0, 0, 0, 27, 27, 27, 0, 0, 0, 0, 0, 0, -9, -9, -9, 0, 0, 0, 0, 0, 0, -9, -9, -9, 0, 0, 0, 0, 0, 0, -9, -9, -9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 2, -2, 4, 0, -4, 2, -2, -6, },
 { 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, -27, -27, -27, -27, -27, -27, -27, -27, -27, 6, 2, -2, 4, 200, -4, 2, -2, -6, 2, 4, 6, -2, 200, 2, -6, -4, -2, },
-{ 45, 45, 45, 45, 45, 45, 45, 45, 45, 6, 2, -2, 4, 200, -4, 2, -2, -6, 26, 24, 22, 20, 18, 16, 14, 12, 10, 2, 4, 6, -2, 200, 2, -6, -4, -2, -36, -36, -36, -36, -36, -36, -36, -36, -36, -19, -21, -23, -25, -27, -29, -31, -33, -35, }, };
-      if (false) {
+{ 45, 45, 45, 45, 45, 45, 45, 45, 45, 6, 2, -2, 4, 200, -4, 2, -2, -6, 26, 24, 22, 20, 18, 16, 14, 12, 10, 2, 4, 6, -2, 200, 2, -6, -4, -2, -36, -36, -36, -36, -36, -36, -36, -36, -36, -19, -21, -23, -25, -27, -29, -31, -33, -35, }, }; */
+      if (true) {
         // Logic to build antiMoves table from clockMoves
         for (int i = 0; i < 8; ++i) {
           for (int j = 0; j < 54; ++j) {
@@ -323,12 +361,16 @@ namespace Rubik2
           for (int j = 0; j < 54; ++j) {
             s1 += $"{antiMoves[i, j]}, ";
           }
-          Debug.Print($"{s1}}},");
+         // Debug.Print($"{s1}}},");
         }
       }
     }
 
-    void drawFace1(int tileIx) {
+    /// <summary> Draw a single cube face and initialise the tiles array... 
+    /// Only the front face is drawn and then rotated to keep the math simpler</summary>
+    /// <param name="cubeface"></param>
+    void drawFace(CubeFace cubeface) {
+      int tileIx = (int)cubeface * 9;
       for (int y = 3; y > -3; y -= 2) {
         for (int x = -3; x < 3; x += 2) {
           Tile tile1 = new Tile(x, y, tileIx);
@@ -339,6 +381,9 @@ namespace Rubik2
       }
     }
 
+    /// <summary> get rotation axis for each possible move </summary>
+    /// <param name="m"> move U L F R B D T S T=rotate whole cube S=spin whole cube </param>
+    /// <returns></returns>
     Vector3D getRotationAxis(char m) {
       Vector3D a = new Vector3D();
       switch (m) {
@@ -353,6 +398,7 @@ namespace Rubik2
       }
       return a;
     }
+
 
     class Piece
     {
@@ -390,7 +436,8 @@ namespace Rubik2
       new Piece() { color1= TileColor.Green, color2=TileColor.Red, color3=TileColor.Yellow,    ix1=26, ix2=33, ix3=51 }
     };
 
-    void setNearColors() {
+    /// <summary> for each tile set the color of adjacent colors for side pieces and corner pieces </summary>
+    void setAdjacentColors() {
       for (int i = 0; i < sidePieces.Length; ++i) {
         Piece sp1 = sidePieces[i];
         Tile tile = Cube.tile(sp1.ix1);

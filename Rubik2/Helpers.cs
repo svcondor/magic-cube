@@ -4,9 +4,7 @@ namespace Rubik2
 {
   public static class Helpers
   {
-    /// <summary>
-    /// Create a triangle which can be used for more complex models
-    /// </summary>
+    /// <summary> Create a triangle which can be used for more complex models </summary>
     /// <param name="p0">The first position of the mesh</param>
     /// <param name="p1">The second position of the mesh</param>
     /// <param name="p2">The third position of the mesh</param>
@@ -29,10 +27,7 @@ namespace Rubik2
       return new GeometryModel3D(triangleMesh, m);
     }
 
-
-    /// <summary>
-    /// Calculate the normal of a plane
-    /// </summary>
+    /// <summary> Calculate the normal of a plane </summary>
     /// <param name="p0">The first point of the plane</param>
     /// <param name="p1">The second point of the plane</param>
     /// <param name="p2">The third point of the plane</param>
@@ -40,7 +35,6 @@ namespace Rubik2
     private static Vector3D calculateNormal(Point3D p0, Point3D p1, Point3D p2) {
       Vector3D v1 = new Vector3D(p1.X - p0.X, p1.Y - p0.Y, p1.Z - p0.Z);
       Vector3D v2 = new Vector3D(p2.X - p1.X, p2.Y - p1.Y, p2.Z - p1.Z);
-
       return Vector3D.CrossProduct(v1, v2);
     }
   }

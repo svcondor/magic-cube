@@ -19,7 +19,7 @@ namespace Rubik2
 
     public static int solveStep;
 
-    public void testSolve() {
+    public void solve() {
       if (solveStep == 0) {
         stepCount = 0;
         solveCount = 0;
